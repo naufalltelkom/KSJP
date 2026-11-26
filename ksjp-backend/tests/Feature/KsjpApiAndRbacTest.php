@@ -327,4 +327,46 @@ class KsjpApiAndRbacTest extends TestCase
             Carbon::setTestNow();
         }
     }
+
+    public function test_filament_customized_sidebar_logo_and_student_mirrored_views_for_guru(): void
+    {
+        $guru = User::where('email', 'firda@smktelkom-pwt.sch.id')->firstOrFail();
+
+        // Guru: logo SMK Telkom Purwokerto tampil, Data Akademik (Guru) dihapus dari sidebar,
+        // Jadwal Reguler menampilkan data XI PPLG 4 & status live, Kalender Pendidikan menampilkan matriks 12 bulan.
+        $this->actingAs($guru)
+            ->get('/admin')
+            ->assertOk()
+            ->assertSee('SMK Telkom Purwokerto')
+            ->assertDontSee('Data Akademik (Guru)');
+
+        $this->actingAs($guru)
+            ->get('/admin/jadwal-pelajarans')
+            ->assertOk()
+            ->assertSee('XI PPLG 4')
+            ->assertSee('Firda Ayu Nirmala, S.Kom');
+
+        $this->actingAs($guru)
+            ->get('/admin/kalender-akademiks')
+            ->assertOk()
+            ->assertSee('JULI 2026')
+            ->assertSee('JUNI 2027');
+    }
+
+    public function test_filament_admin_organisasi_dashboard_snippet_and_calendar_only_sidebar(): void
+    {
+        $osis = User::where('email', 'osis@smktelkom-pwt.sch.id')->firstOrFail();
+
+        // Admin Organisasi (OSIS): sidebar kiri hanya menampilkan Dashboard + Kalender Pendidikan (tanpa Log Notifikasi),
+        // dan Dashboard menampilkan cuplikan halaman Kalender Pendidikan.
+        $this->actingAs($osis)
+            ->get('/admin')
+            ->assertOk()
+            ->assertSee('SMK Telkom Purwokerto')
+            ->assertSee('Cuplikan Kalender Pendidikan')
+            ->assertSee('Kalender Pendidikan')
+            ->assertDontSee('Log Notifikasi')
+            ->assertDontSee('Data Akademik (Guru)')
+            ->assertDontSee('Manajemen Jadwal (Guru)');
+    }
 }

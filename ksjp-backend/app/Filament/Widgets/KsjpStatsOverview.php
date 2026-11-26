@@ -10,9 +10,17 @@ use App\Models\Notifikasi;
 use App\Models\User;
 use Filament\Widgets\StatsOverviewWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
+use Illuminate\Support\Facades\Auth;
 
 class KsjpStatsOverview extends StatsOverviewWidget
 {
+    protected static bool $isLazy = false;
+
+    public static function canView(): bool
+    {
+        return Auth::user()?->isGuru() ?? false;
+    }
+
     protected function getStats(): array
     {
         $totalSiswa = User::where('role', UserRole::Siswa->value)->count();

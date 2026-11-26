@@ -12,6 +12,10 @@ import {
 } from '../utils/date';
 import { useAuth } from '../context/AuthContext';
 import { usePwaInstall } from '../context/PwaContext';
+import {
+  getNotificationStatus,
+  requestOsNotificationPermission,
+} from '../utils/notifications';
 
 export default function DashboardPage({
   jadwalData,
@@ -23,6 +27,7 @@ export default function DashboardPage({
 }) {
   const { user } = useAuth();
   const { triggerInstall, installed } = usePwaInstall();
+  const [notifPerm, setNotifPerm] = useState(() => getNotificationStatus());
   const [now, setNow] = useState(() => new Date());
 
   useEffect(() => {
@@ -108,6 +113,16 @@ export default function DashboardPage({
               </span>
               {installed ? 'Aplikasi Terpasang' : 'Install App (Android & iOS)'}
             </button>
+            {notifPerm === 'default' && (
+              <button
+                type="button"
+                onClick={async () => setNotifPerm(await requestOsNotificationPermission())}
+                className="rounded-xl bg-amber-400 hover:bg-amber-300 text-[#191c1d] font-bold px-4 py-2.5 text-sm transition inline-flex items-center gap-2 cursor-pointer shadow-xs"
+              >
+                <span className="material-symbols-outlined text-[18px]">notifications_active</span>
+                Aktifkan Pop-up HP
+              </button>
+            )}
           </div>
         </div>
       </section>

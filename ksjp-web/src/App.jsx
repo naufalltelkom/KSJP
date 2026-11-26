@@ -14,6 +14,7 @@ import {
   markAllNotifikasiRead,
   markNotifikasiRead,
 } from './services/api';
+import { showOsPopupNotification } from './utils/notifications';
 
 function PortalShell() {
   const { isAuthenticated, initializing } = useAuth();
@@ -32,6 +33,7 @@ function PortalShell() {
 
   const knownNotifIdsRef = useRef(new Set());
   const firstPollDoneRef = useRef(false);
+  const lastBellKeyRef = useRef('');
 
   const loadNotifikasi = useCallback(async (showToastOnNew = false) => {
     try {
@@ -48,6 +50,31 @@ function PortalShell() {
             title: newestUnread.judul,
             message: newestUnread.pesan,
           });
+          showOsPopupNotification(
+            newestUnread.judul,
+            newestUnread.pesan,
+            `ksjp-notif-${newestUnread.id}`
+          );
+        }
+      }
+
+      const bell = res?.pengingat_pergantian_jam;
+      if (bell?.pengingat_aktif && bell?.pesan_pengingat) {
+        const todayStr = new Date().toISOString().slice(0, 10);
+        const bellKey = `${todayStr}-${bell.slot_aktif?.id || 'x'}-${bell.slot_berikutnya?.id || 'y'}`;
+        if (lastBellKeyRef.current !== bellKey) {
+          lastBellKeyRef.current = bellKey;
+          if (showToastOnNew) {
+            setToast({
+              title: 'Pengingat Pergantian Jam',
+              message: bell.pesan_pengingat,
+            });
+          }
+          showOsPopupNotification(
+            'Pengingat Pergantian Jam KSJP',
+            bell.pesan_pengingat,
+            `ksjp-bell-${bellKey}`
+          );
         }
       }
 

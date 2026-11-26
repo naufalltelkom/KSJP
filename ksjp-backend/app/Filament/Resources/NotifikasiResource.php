@@ -18,6 +18,7 @@ use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Support\Facades\Auth;
 use UnitEnum;
 
 class NotifikasiResource extends Resource
@@ -35,6 +36,11 @@ class NotifikasiResource extends Resource
     protected static ?string $pluralModelLabel = 'Notifikasi Real-time';
 
     protected static ?int $navigationSort = 6;
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        return Auth::user()?->isGuru() ?? false;
+    }
 
     public static function form(Schema $schema): Schema
     {

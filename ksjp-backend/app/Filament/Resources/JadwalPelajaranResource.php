@@ -4,8 +4,11 @@ namespace App\Filament\Resources;
 
 use App\Enums\UserRole;
 use App\Filament\Resources\JadwalPelajaranResource\Pages;
+use App\Models\JadwalMomentum;
 use App\Models\JadwalPelajaran;
+use App\Services\JadwalService;
 use BackedEnum;
+use Carbon\Carbon;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
@@ -20,6 +23,7 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Auth;
 use UnitEnum;
 
 class JadwalPelajaranResource extends Resource
@@ -97,32 +101,75 @@ class JadwalPelajaranResource extends Resource
 
     public static function table(Table $table): Table
     {
+        $nowWib = Carbon::now('Asia/Jakarta');
+        $todayHari = JadwalService::namaHari($nowWib);
+        $nowTime = $nowWib->format('H:i:s');
+        $momentumByRegulerId = JadwalMomentum::whereDate('tanggal', $nowWib->toDateString())
+            ->whereNotNull('id_jadwal_reguler')
+            ->pluck('status_perubahan', 'id_jadwal_reguler')
+            ->all();
+
         return $table
             ->defaultSort('jam_ke')
+            ->paginated([25, 50, 'all'])
+            ->defaultPaginationPageOption(50)
             ->columns([
-                TextColumn::make('kelas.nama_kelas')
-                    ->label('Kelas')
-                    ->sortable(),
                 TextColumn::make('hari')
                     ->label('Hari')
                     ->badge()
+                    ->color('gray')
                     ->sortable(),
                 TextColumn::make('jam_ke')
-                    ->label('Jam Ke')
+                    ->label('Jam')
+                    ->formatStateUsing(fn ($state): string => "Jam {$state}")
+                    ->badge()
+                    ->color('danger')
                     ->sortable(),
                 TextColumn::make('jam_mulai')
-                    ->label('Mulai'),
-                TextColumn::make('jam_selesai')
-                    ->label('Selesai'),
+                    ->label('Waktu (WIB)')
+                    ->formatStateUsing(fn (JadwalPelajaran $record): string => substr((string) $record->jam_mulai, 0, 5) . ' - ' . substr((string) $record->jam_selesai, 0, 5))
+                    ->weight('semibold'),
                 TextColumn::make('mata_pelajaran')
-                    ->label('Mata Pelajaran')
-                    ->searchable(),
+                    ->label('Mata Pelajaran / Kegiatan')
+                    ->weight('bold')
+                    ->searchable()
+                    ->wrap(),
                 TextColumn::make('nama_guru')
-                    ->label('Guru')
-                    ->searchable(),
+                    ->label('Guru Pengampu')
+                    ->searchable()
+                    ->wrap(),
                 TextColumn::make('ruangan')
-                    ->label('Ruangan')
+                    ->label('Ruangan / Lab')
+                    ->badge()
+                    ->color('info')
                     ->searchable(),
+                TextColumn::make('status_live')
+                    ->label('Status Live')
+                    ->state(function (JadwalPelajaran $record) use ($todayHari, $nowTime, $momentumByRegulerId): string {
+                        if (isset($momentumByRegulerId[$record->id])) {
+                            return 'Momentum Aktif';
+                        }
+                        if ($record->hari !== $todayHari) {
+                            return 'Terjadwal';
+                        }
+                        $mulai = substr((string) $record->jam_mulai, 0, 8);
+                        $selesai = substr((string) $record->jam_selesai, 0, 8);
+                        if ($nowTime >= $mulai && $nowTime < $selesai) {
+                            return 'Sedang Berlangsung';
+                        }
+                        if ($nowTime >= $selesai) {
+                            return 'Selesai';
+                        }
+
+                        return 'Akan Datang';
+                    })
+                    ->badge()
+                    ->color(fn (string $state): string => match ($state) {
+                        'Sedang Berlangsung' => 'success',
+                        'Momentum Aktif' => 'warning',
+                        'Akan Datang' => 'info',
+                        default => 'gray',
+                    }),
             ])
             ->filters([
                 SelectFilter::make('hari')
@@ -136,7 +183,8 @@ class JadwalPelajaranResource extends Resource
                     ]),
                 SelectFilter::make('id_kelas')
                     ->label('Kelas')
-                    ->relationship('kelas', 'nama_kelas'),
+                    ->relationship('kelas', 'nama_kelas')
+                    ->default(fn () => Auth::user()?->id_kelas),
             ])
             ->recordActions([
                 EditAction::make(),
