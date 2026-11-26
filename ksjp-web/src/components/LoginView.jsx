@@ -307,18 +307,9 @@ export default function LoginView() {
               </div>
 
               <div className="rounded-2xl bg-surface-low p-3.5 text-xs text-secondary leading-relaxed">
-                <strong className="text-on-surface">Catatan RBAC:</strong> Pengelolaan jadwal
-                reguler, Jadwal Momentum, dan agenda organisasi dilakukan melalui{' '}
-                <a
-                  href="http://127.0.0.1:8000/admin"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-primary font-semibold underline"
-                >
-                  Filament Admin (/admin)
-                </a>{' '}
-                oleh <span className="font-semibold">guru</span> dan{' '}
-                <span className="font-semibold">admin_organisasi</span>.
+                <strong className="text-on-surface">Info Siswa:</strong> Login 1x menggunakan NIS
+                masing-masing untuk memantau jadwal pelajaran real-time, Kalender Pendidikan
+                2026/2027, dan notifikasi kelas XI PPLG 4.
               </div>
             </div>
           </div>
