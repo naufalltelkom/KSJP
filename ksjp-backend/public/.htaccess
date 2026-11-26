@@ -13,9 +13,17 @@
     RewriteCond %{HTTP:x-xsrf-token} .
     RewriteRule .* - [E=HTTP_X_XSRF_TOKEN:%{HTTP:X-XSRF-Token}]
 
-    # Redirect Trailing Slashes If Not A Folder...
+    # Redirect Trailing Slashes If Not A Folder (preserve HTTPS behind proxy)...
     RewriteCond %{REQUEST_FILENAME} !-d
-    RewriteCond %{REQUEST_URI} (.+)/$
+    RewriteCond %{REQUEST_URI} ^(.+)/$
+    RewriteCond %{HTTP:X-Forwarded-Proto} =https [OR]
+    RewriteCond %{HTTPS} =on
+    RewriteRule ^ https://%{HTTP_HOST}%1 [L,R=301]
+
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_URI} ^(.+)/$
+    RewriteCond %{HTTP:X-Forwarded-Proto} !=https
+    RewriteCond %{HTTPS} !=on
     RewriteRule ^ %1 [L,R=301]
 
     # Send Requests To Front Controller...
