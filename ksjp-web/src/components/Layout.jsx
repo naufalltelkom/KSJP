@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { usePwaInstall } from '../context/PwaContext';
 import { getRoleLabel } from '../utils/date';
 
 const NAV_ITEMS = [
@@ -23,6 +24,7 @@ export default function Layout({
   children,
 }) {
   const { user, logout } = useAuth();
+  const { triggerInstall, installed } = usePwaInstall();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [localSearch, setLocalSearch] = useState(searchQuery);
 
@@ -151,19 +153,21 @@ export default function Layout({
           )}
         </nav>
 
-        {/* Bottom Helpdesk & Android APK Download Card */}
+        {/* Bottom Helpdesk & Cross-Platform PWA Install Card */}
         <div className="p-4 border-t border-surface-high/60 space-y-2.5">
-          <a
-            href="/downloads/ksjp-stematel.apk"
-            download="KSJP-SMK-Telkom-Purwokerto.apk"
-            className="w-full rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 px-3.5 py-2.5 text-xs font-bold transition flex items-center justify-between"
+          <button
+            type="button"
+            onClick={triggerInstall}
+            className="w-full rounded-xl bg-primary-fixed/50 hover:bg-primary-fixed text-primary-container border border-primary/20 px-3.5 py-2.5 text-xs font-bold transition flex items-center justify-between cursor-pointer"
           >
             <span className="flex items-center gap-2">
-              <span className="material-symbols-outlined text-[18px]">android</span>
-              Download Aplikasi HP (.apk)
+              <span className="material-symbols-outlined text-[18px]">
+                {installed ? 'check_circle' : 'install_mobile'}
+              </span>
+              {installed ? 'Terpasang di Perangkat' : 'Install App (Android & iOS)'}
             </span>
-            <span className="material-symbols-outlined text-[16px]">download</span>
-          </a>
+            <span className="material-symbols-outlined text-[16px]">add_to_home_screen</span>
+          </button>
 
           <div className="rounded-2xl bg-surface-low p-4 space-y-2">
             <div className="flex items-center gap-2 text-xs font-bold text-on-surface">
@@ -238,13 +242,26 @@ export default function Layout({
                 );
               })}
             </div>
-            <button
-              type="button"
-              onClick={logout}
-              className="rounded-xl bg-red-50 text-[#ba1a1a] py-2.5 text-sm font-semibold"
-            >
-              Keluar Akun
-            </button>
+            <div className="space-y-2 pt-3 border-t border-surface-high">
+              <button
+                type="button"
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  triggerInstall();
+                }}
+                className="w-full rounded-xl bg-primary-fixed/60 text-primary-container py-2.5 px-3 text-sm font-bold flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-[18px]">install_mobile</span>
+                {installed ? 'Aplikasi Terpasang' : 'Install App (Android & iOS)'}
+              </button>
+              <button
+                type="button"
+                onClick={logout}
+                className="w-full rounded-xl bg-red-50 text-[#ba1a1a] py-2.5 text-sm font-semibold cursor-pointer"
+              >
+                Keluar Akun
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -277,7 +294,17 @@ export default function Layout({
             </form>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
+            {!installed && (
+              <button
+                type="button"
+                onClick={triggerInstall}
+                className="lg:hidden inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-primary-container text-white text-[11px] font-bold shadow-xs cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-[15px]">install_mobile</span>
+                <span>Install App</span>
+              </button>
+            )}
             <span className="hidden md:inline-flex items-center px-3 py-1.5 rounded-full bg-surface-container text-xs font-semibold text-on-surface-variant">
               T.A. 2026/2027
             </span>

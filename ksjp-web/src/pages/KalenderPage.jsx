@@ -34,6 +34,14 @@ export default function KalenderPage({ kalenderItems = [], externalSearch = '' }
   const [kategori, setKategori] = useState('all');
   const [search, setSearch] = useState(externalSearch);
   const [selectedModal, setSelectedModal] = useState(null);
+  const [mobileMonthOnly, setMobileMonthOnly] = useState(true);
+  const [mobileMonthIndex, setMobileMonthIndex] = useState(() => {
+    const now = new Date();
+    const idx = SEMESTER_2026_2027_MONTHS.findIndex(
+      (m) => m.tahun === now.getFullYear() && m.bulan === now.getMonth() + 1
+    );
+    return idx >= 0 ? idx : 0;
+  });
 
   useEffect(() => {
     setSearch(externalSearch);
@@ -74,6 +82,12 @@ export default function KalenderPage({ kalenderItems = [], externalSearch = '' }
     if (semester === 'all') return SEMESTER_2026_2027_MONTHS;
     return SEMESTER_2026_2027_MONTHS.filter((m) => m.semester === semester);
   }, [semester]);
+
+  const safeMobileIdx = Math.min(mobileMonthIndex, Math.max(visibleMonths.length - 1, 0));
+
+  useEffect(() => {
+    setMobileMonthIndex((prev) => Math.min(prev, Math.max(visibleMonths.length - 1, 0)));
+  }, [visibleMonths.length]);
 
   const eventsByDate = useMemo(() => {
     const map = {};
@@ -119,11 +133,11 @@ export default function KalenderPage({ kalenderItems = [], externalSearch = '' }
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="grid grid-cols-1 sm:flex sm:flex-wrap items-center gap-2 w-full lg:w-auto">
             <select
               value={semester}
               onChange={(e) => setSemester(e.target.value)}
-              className="rounded-xl bg-surface-low border border-surface-high px-3.5 py-2 text-xs font-semibold text-on-surface"
+              className="w-full sm:w-auto rounded-xl bg-surface-low border border-surface-high px-3.5 py-2 text-xs font-semibold text-on-surface"
             >
               <option value="all">Semua Semester (12 Bulan)</option>
               <option value="ganjil">Semester Ganjil 2026</option>
@@ -133,7 +147,7 @@ export default function KalenderPage({ kalenderItems = [], externalSearch = '' }
             <select
               value={sumber}
               onChange={(e) => setSumber(e.target.value)}
-              className="rounded-xl bg-surface-low border border-surface-high px-3.5 py-2 text-xs font-semibold text-on-surface"
+              className="w-full sm:w-auto rounded-xl bg-surface-low border border-surface-high px-3.5 py-2 text-xs font-semibold text-on-surface"
             >
               <option value="all">Semua Sumber</option>
               <option value="resmi_sekolah">Resmi Sekolah</option>
@@ -145,17 +159,17 @@ export default function KalenderPage({ kalenderItems = [], externalSearch = '' }
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Cari PSTS, UKK, OSIS, libur..."
-              className="rounded-xl bg-surface-low border border-surface-high px-3.5 py-2 text-xs text-on-surface min-w-[200px]"
+              className="w-full sm:w-auto sm:min-w-[200px] rounded-xl bg-surface-low border border-surface-high px-3.5 py-2 text-xs text-on-surface"
             />
           </div>
         </div>
 
         {/* 10-Category Legend Bar */}
-        <div className="rounded-2xl bg-surface-low p-4 border border-surface-high/60">
+        <div className="rounded-2xl bg-surface-low p-3.5 sm:p-4 border border-surface-high/60">
           <div className="text-[11px] font-bold uppercase tracking-wider text-secondary mb-2.5">
             Keterangan Simbol &amp; Indikator Warna
           </div>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-2">
+          <div className="grid grid-cols-2 lg:grid-cols-5 gap-x-3 gap-y-2">
             {CALENDAR_LEGEND_ITEMS.map((item) => (
               <div key={item.key} className="flex items-center gap-2 text-xs text-on-surface">
                 <span className={`w-3.5 h-3.5 rounded-full shrink-0 ${item.dotClass}`} />
@@ -169,13 +183,81 @@ export default function KalenderPage({ kalenderItems = [], externalSearch = '' }
       {/* Main 12-Month Matrix + Right Sidebar */}
       <div className="grid xl:grid-cols-12 gap-6 items-start">
         {/* 12-Month Calendar Grid (8 Cols) */}
-        <div className="xl:col-span-8 grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {visibleMonths.map((m) => {
+        <div className="xl:col-span-8 space-y-3 min-w-0">
+          {/* Mobile Month Switcher Bar (Android / iOS viewport friendly) */}
+          <div className="sm:hidden rounded-2xl bg-white p-3 shadow-xs border border-surface-high/60 space-y-2.5">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={() =>
+                    setMobileMonthIndex((i) =>
+                      i <= 0 ? visibleMonths.length - 1 : i - 1
+                    )
+                  }
+                  disabled={!mobileMonthOnly}
+                  className="w-8 h-8 rounded-xl bg-surface-low disabled:opacity-40 flex items-center justify-center text-on-surface"
+                  aria-label="Bulan sebelumnya"
+                >
+                  <span className="material-symbols-outlined text-[18px]">chevron_left</span>
+                </button>
+                <span className="text-xs font-extrabold text-on-surface min-w-[115px] text-center">
+                  {mobileMonthOnly
+                    ? visibleMonths[safeMobileIdx]?.label
+                    : `${visibleMonths.length} Bulan`}
+                </span>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setMobileMonthIndex((i) =>
+                      i >= visibleMonths.length - 1 ? 0 : i + 1
+                    )
+                  }
+                  disabled={!mobileMonthOnly}
+                  className="w-8 h-8 rounded-xl bg-surface-low disabled:opacity-40 flex items-center justify-center text-on-surface"
+                  aria-label="Bulan berikutnya"
+                >
+                  <span className="material-symbols-outlined text-[18px]">chevron_right</span>
+                </button>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setMobileMonthOnly((v) => !v)}
+                className="px-3 py-1.5 rounded-xl bg-primary-fixed text-on-primary-fixed text-[11px] font-bold shrink-0"
+              >
+                {mobileMonthOnly ? 'Lihat Semua' : 'Per 1 Bulan'}
+              </button>
+            </div>
+
+            {mobileMonthOnly && (
+              <div className="flex gap-1.5 overflow-x-auto pb-0.5 no-scrollbar">
+                {visibleMonths.map((m, idx) => (
+                  <button
+                    key={`pill-${m.tahun}-${m.bulan}`}
+                    type="button"
+                    onClick={() => setMobileMonthIndex(idx)}
+                    className={`px-2.5 py-1 rounded-full text-[11px] font-bold shrink-0 transition ${
+                      idx === safeMobileIdx
+                        ? 'bg-primary-container text-white'
+                        : 'bg-surface-low text-secondary'
+                    }`}
+                  >
+                    {m.label.split(' ')[0].slice(0, 3)} {String(m.tahun).slice(2)}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {visibleMonths.map((m, mIdx) => {
             const cells = buildMonthCells(m.tahun, m.bulan);
+            const hideOnMobile = mobileMonthOnly && mIdx !== safeMobileIdx;
             return (
               <div
                 key={`${m.tahun}-${m.bulan}`}
-                className="rounded-3xl bg-white p-4 shadow-xs border border-surface-high/60 flex flex-col justify-between"
+                className={`${hideOnMobile ? 'hidden sm:flex' : 'flex'} rounded-3xl bg-white p-4 shadow-xs border border-surface-high/60 flex-col justify-between min-w-0`}
               >
                 <div>
                   <div className="flex items-center justify-between mb-3">
@@ -218,7 +300,7 @@ export default function KalenderPage({ kalenderItems = [], externalSearch = '' }
                             setSelectedModal({ date: cell.iso, events: dayEvents })
                           }
                           title={dayEvents.map((e) => e.judul).join(' | ')}
-                          className={`h-7 w-full rounded-full text-[11px] flex items-center justify-center transition ${
+                          className={`h-9 sm:h-7 w-full rounded-full text-xs sm:text-[11px] flex items-center justify-center transition ${
                             style
                               ? `${style.cell} cursor-pointer hover:scale-105`
                               : cell.isSunday
@@ -235,6 +317,7 @@ export default function KalenderPage({ kalenderItems = [], externalSearch = '' }
               </div>
             );
           })}
+          </div>
         </div>
 
         {/* Right Panel: Filter Chips + Agenda List + Pengesahan Resmi */}
@@ -322,8 +405,8 @@ export default function KalenderPage({ kalenderItems = [], externalSearch = '' }
 
       {/* Modal Detail Agenda */}
       {selectedModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs">
-          <div className="w-full max-w-lg rounded-3xl bg-white shadow-2xl overflow-hidden">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/50 backdrop-blur-xs">
+          <div className="w-full sm:max-w-lg rounded-t-3xl sm:rounded-3xl bg-white shadow-2xl overflow-hidden">
             <div className="bg-gradient-to-r from-primary to-primary-container text-white px-6 py-4 flex items-center justify-between">
               <div>
                 <div className="text-[11px] font-bold uppercase tracking-wider text-white/80">

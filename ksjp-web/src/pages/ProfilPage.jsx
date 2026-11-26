@@ -1,8 +1,10 @@
 import { useAuth } from '../context/AuthContext';
+import { usePwaInstall } from '../context/PwaContext';
 import { getRoleLabel } from '../utils/date';
 
 export default function ProfilPage() {
   const { user, logout, syncProfile } = useAuth();
+  const { triggerInstall, installed } = usePwaInstall();
 
   const initials = (user?.nama_lengkap || 'KS')
     .split(' ')
@@ -127,14 +129,16 @@ export default function ProfilPage() {
               Token Laravel Sanctum tersimpan aman di perangkat ini sehingga Anda tidak perlu
               login berulang kali setiap membuka portal KSJP.
             </p>
-            <a
-              href="/downloads/ksjp-stematel.apk"
-              download="KSJP-SMK-Telkom-Purwokerto.apk"
-              className="w-full rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 font-bold py-3 text-sm transition flex items-center justify-center gap-2"
+            <button
+              type="button"
+              onClick={triggerInstall}
+              className="w-full rounded-xl bg-primary-fixed/50 hover:bg-primary-fixed text-primary-container border border-primary/20 font-bold py-3 text-sm transition flex items-center justify-center gap-2 cursor-pointer"
             >
-              <span className="material-symbols-outlined text-[18px]">android</span>
-              Download Aplikasi Android HP (.apk)
-            </a>
+              <span className="material-symbols-outlined text-[18px]">
+                {installed ? 'check_circle' : 'install_mobile'}
+              </span>
+              {installed ? 'Aplikasi Terpasang di Perangkat' : 'Install Aplikasi HP (Android & iOS)'}
+            </button>
             <button
               type="button"
               onClick={logout}

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { usePwaInstall } from '../context/PwaContext';
 
 const DEMO_ACCOUNTS = [
   {
@@ -24,6 +25,7 @@ const DEMO_ACCOUNTS = [
 
 export default function LoginView() {
   const { login } = useAuth();
+  const { triggerInstall, installed } = usePwaInstall();
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -77,14 +79,16 @@ export default function LoginView() {
             <span className="hidden md:inline-flex px-3 py-1.5 rounded-full bg-primary-fixed text-on-primary-fixed">
               Tahun Pelajaran 2026/2027
             </span>
-            <a
-              href="/downloads/ksjp-stematel.apk"
-              download="KSJP-SMK-Telkom-Purwokerto.apk"
-              className="px-3.5 py-1.5 rounded-full bg-primary-container text-white hover:bg-surface-tint transition inline-flex items-center gap-1.5 shadow-xs"
+            <button
+              type="button"
+              onClick={triggerInstall}
+              className="px-3.5 py-1.5 rounded-full bg-primary-container text-white hover:bg-surface-tint transition inline-flex items-center gap-1.5 shadow-xs cursor-pointer"
             >
-              <span className="material-symbols-outlined text-[16px]">android</span>
-              Download APK HP
-            </a>
+              <span className="material-symbols-outlined text-[16px]">
+                {installed ? 'check_circle' : 'install_mobile'}
+              </span>
+              {installed ? 'Aplikasi Aktif' : 'Install App (Android & iOS)'}
+            </button>
             <a
               href={
                 import.meta.env.VITE_ADMIN_URL ||

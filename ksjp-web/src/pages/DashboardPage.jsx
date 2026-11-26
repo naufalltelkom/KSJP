@@ -11,6 +11,7 @@ import {
   toLocalDateString,
 } from '../utils/date';
 import { useAuth } from '../context/AuthContext';
+import { usePwaInstall } from '../context/PwaContext';
 
 export default function DashboardPage({
   jadwalData,
@@ -21,6 +22,7 @@ export default function DashboardPage({
   loading,
 }) {
   const { user } = useAuth();
+  const { triggerInstall, installed } = usePwaInstall();
   const [now, setNow] = useState(() => new Date());
 
   useEffect(() => {
@@ -96,14 +98,16 @@ export default function DashboardPage({
               <span className="material-symbols-outlined text-[18px]">schedule</span>
               Jadwal Hari Ini
             </button>
-            <a
-              href="/downloads/ksjp-stematel.apk"
-              download="KSJP-SMK-Telkom-Purwokerto.apk"
-              className="rounded-xl bg-white/15 hover:bg-white/25 text-white border border-white/25 font-semibold px-4 py-2.5 text-sm transition inline-flex items-center gap-2"
+            <button
+              type="button"
+              onClick={triggerInstall}
+              className="rounded-xl bg-white/15 hover:bg-white/25 text-white border border-white/25 font-semibold px-4 py-2.5 text-sm transition inline-flex items-center gap-2 cursor-pointer"
             >
-              <span className="material-symbols-outlined text-[18px]">android</span>
-              Download APK HP
-            </a>
+              <span className="material-symbols-outlined text-[18px]">
+                {installed ? 'check_circle' : 'install_mobile'}
+              </span>
+              {installed ? 'Aplikasi Terpasang' : 'Install App (Android & iOS)'}
+            </button>
           </div>
         </div>
       </section>
