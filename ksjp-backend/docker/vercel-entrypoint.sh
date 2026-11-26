@@ -34,29 +34,33 @@ if [ -n "$EXTERNAL_DB_URL" ] || { [ -n "${DB_HOST:-${POSTGRES_HOST:-}}" ] && [ "
   fi
 
   if [ "${KSJP_AUTO_MIGRATE:-true}" = "true" ]; then
-    MIGRATED=false
-    for attempt in 1 2 3; do
-      echo "[ksjp-entrypoint] Running migrate --force (attempt ${attempt})..." >&2
-      if php artisan migrate --force; then
-        MIGRATED=true
-        break
-      fi
-      sleep 2
-    done
+    NEEDS_SETUP=$(php -r '
+      require "vendor/autoload.php";
+      $app = require "bootstrap/app.php";
+      $app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
+      try {
+        $u = \App\Models\User::count();
+        $j = \App\Models\JadwalPelajaran::count();
+        $k = \App\Models\KalenderAkademik::count();
+        echo ($u < 31 || $j === 0 || $k === 0) ? "1" : "0";
+      } catch (\Throwable $e) {
+        echo "1";
+      }
+    ' || echo "1")
 
-    if [ "$MIGRATED" = "true" ]; then
-      HAS_KELAS=$(php -r '
-        require "vendor/autoload.php";
-        $app = require "bootstrap/app.php";
-        $app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
-        try { echo \App\Models\Kelas::count(); } catch (\Throwable $e) { echo "0"; }
-      ')
-      if [ "$HAS_KELAS" = "0" ]; then
-        echo "[ksjp-entrypoint] Seeding initial KSJP dataset..." >&2
-        php artisan db:seed --force || true
-      fi
-    else
-      echo "[ksjp-entrypoint] WARNING: migrate failed after 3 attempts" >&2
+    if [ "$NEEDS_SETUP" = "1" ]; then
+      (
+        echo "[ksjp-entrypoint] Background migrate & seed started..." >&2
+        for attempt in 1 2 3; do
+          if php artisan migrate --force; then
+            php artisan db:seed --force || true
+            echo "[ksjp-entrypoint] Background migrate & seed completed." >&2
+            exit 0
+          fi
+          sleep 2
+        done
+        echo "[ksjp-entrypoint] ERROR: migrate failed after 3 attempts" >&2
+      ) >&2 &
     fi
   fi
 else
