@@ -39,6 +39,12 @@ if [ -n "$EXTERNAL_DB_URL" ] || { [ -n "${DB_HOST:-${POSTGRES_HOST:-}}" ] && [ "
       $app = require "bootstrap/app.php";
       $app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
       try {
+        $diskCount = count(glob(database_path("migrations/*.php")) ?: []);
+        $ranCount = \Illuminate\Support\Facades\DB::table("migrations")->count();
+        if ($ranCount < $diskCount) {
+          echo "1";
+          exit;
+        }
         $u = \App\Models\User::count();
         $j = \App\Models\JadwalPelajaran::count();
         $k = \App\Models\KalenderAkademik::count();
@@ -50,16 +56,44 @@ if [ -n "$EXTERNAL_DB_URL" ] || { [ -n "${DB_HOST:-${POSTGRES_HOST:-}}" ] && [ "
 
     if [ "$NEEDS_SETUP" = "1" ]; then
       (
-        echo "[ksjp-entrypoint] Background migrate & seed started..." >&2
-        for attempt in 1 2 3; do
-          if php artisan migrate --force; then
-            php artisan db:seed --force || true
-            echo "[ksjp-entrypoint] Background migrate & seed completed." >&2
-            exit 0
-          fi
-          sleep 2
-        done
-        echo "[ksjp-entrypoint] ERROR: migrate failed after 3 attempts" >&2
+        php -r '
+          require "vendor/autoload.php";
+          $app = require "bootstrap/app.php";
+          $kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
+          $kernel->bootstrap();
+
+          $locked = false;
+          try {
+            $res = \Illuminate\Support\Facades\DB::selectOne("SELECT pg_try_advisory_lock(772026) AS locked");
+            $locked = (bool) ($res->locked ?? false);
+          } catch (\Throwable $e) {
+            $locked = true;
+          }
+
+          if (! $locked) {
+            fwrite(STDERR, "[ksjp-entrypoint] Another container holds migration lock; skipping.\n");
+            exit(0);
+          }
+
+          try {
+            fwrite(STDERR, "[ksjp-entrypoint] Running migrate --force under advisory lock...\n");
+            $kernel->call("migrate", ["--force" => true]);
+            fwrite(STDERR, $kernel->output());
+
+            $u = \App\Models\User::count();
+            $j = \App\Models\JadwalPelajaran::count();
+            $k = \App\Models\KalenderAkademik::count();
+            if ($u < 31 || $j === 0 || $k === 0) {
+              fwrite(STDERR, "[ksjp-entrypoint] Seeding initial KSJP dataset...\n");
+              $kernel->call("db:seed", ["--force" => true]);
+              fwrite(STDERR, $kernel->output());
+            }
+          } finally {
+            try {
+              \Illuminate\Support\Facades\DB::statement("SELECT pg_advisory_unlock(772026)");
+            } catch (\Throwable $e) {}
+          }
+        '
       ) >&2 &
     fi
   fi
