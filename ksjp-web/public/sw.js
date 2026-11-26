@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ksjp-stematel-shell-v2';
+const CACHE_NAME = 'ksjp-stematel-shell-v3';
 const APP_SHELL = ['/', '/manifest.webmanifest', '/favicon.svg', '/icons/icon-192.png', '/icons/apple-touch-icon.png'];
 
 self.addEventListener('install', (event) => {
@@ -52,14 +52,37 @@ self.addEventListener('fetch', (event) => {
   );
 });
 
+self.addEventListener('push', (event) => {
+  let payload = {};
+  try {
+    payload = event.data ? event.data.json() : {};
+  } catch {
+    payload = { title: 'KSJP SMK Telkom Purwokerto', body: event.data ? event.data.text() : '' };
+  }
+
+  const title = payload.title || 'KSJP SMK Telkom Purwokerto';
+  const options = {
+    body: payload.body || 'Ada pembaruan jadwal atau kalender terbaru.',
+    icon: '/icons/icon-192.png',
+    badge: '/icons/icon-192.png',
+    tag: payload.tag || 'ksjp-push',
+    renotify: true,
+    vibrate: [200, 100, 200],
+    data: { url: payload.url || '/' },
+  };
+
+  event.waitUntil(self.registration.showNotification(title, options));
+});
+
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
+  const targetUrl = event.notification?.data?.url || '/';
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clients) => {
       for (const client of clients) {
         if ('focus' in client) return client.focus();
       }
-      if (self.clients.openWindow) return self.clients.openWindow('/');
+      if (self.clients.openWindow) return self.clients.openWindow(targetUrl);
     })
   );
 });

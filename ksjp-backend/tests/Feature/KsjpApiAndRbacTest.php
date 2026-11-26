@@ -369,4 +369,29 @@ class KsjpApiAndRbacTest extends TestCase
             ->assertDontSee('Data Akademik (Guru)')
             ->assertDontSee('Manajemen Jadwal (Guru)');
     }
+
+    public function test_siswa_can_register_web_push_subscription_for_realtime_notifications(): void
+    {
+        $siswa = User::where('nis', '541251216')->firstOrFail();
+        $token = $siswa->createToken('pwa-push')->plainTextToken;
+
+        $this->getJson('/api/push/vapid-public-key')->assertOk();
+
+        $this->withHeader('Authorization', "Bearer {$token}")
+            ->postJson('/api/push/subscribe', [
+                'endpoint' => 'https://fcm.googleapis.com/fcm/send/example-token-123',
+                'keys' => [
+                    'p256dh' => 'BNcRdreALRFXTkOOUHK1EtK2wtaz5Ry4YfYCA_0QTpQtUbVlUls0VJXg7A8u-Ts1XbjhazAkj7I99e8QcYP7DkM',
+                    'auth' => 'tBHItJI5svbpez7KI4CCXg',
+                ],
+                'content_encoding' => 'aes128gcm',
+            ])
+            ->assertOk()
+            ->assertJsonPath('success', true);
+
+        $this->assertDatabaseHas('push_subscriptions', [
+            'id_user' => $siswa->id,
+            'id_kelas' => $siswa->id_kelas,
+        ]);
+    }
 }

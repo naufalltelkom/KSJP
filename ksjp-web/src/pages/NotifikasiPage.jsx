@@ -4,7 +4,7 @@ import { formatJamPendek } from '../utils/date';
 import {
   getNotificationStatus,
   requestOsNotificationPermission,
-  showOsPopupNotification,
+  triggerServerPushTest,
 } from '../utils/notifications';
 
 const TIPE_META = {
@@ -44,6 +44,7 @@ export default function NotifikasiPage({
   const [filterTipe, setFilterTipe] = useState('all');
   const [unreadOnly, setUnreadOnly] = useState(false);
   const [notifPerm, setNotifPerm] = useState(() => getNotificationStatus());
+  const [testingPush, setTestingPush] = useState(false);
 
   const handleEnablePopup = async () => {
     const status = await requestOsNotificationPermission();
@@ -51,11 +52,12 @@ export default function NotifikasiPage({
   };
 
   const handleTestPopup = async () => {
-    await showOsPopupNotification(
-      'Tes Notifikasi KSJP Stematel',
-      'Notifikasi pop-up berhasil tampil di perangkat Anda.',
-      `ksjp-test-${Date.now()}`
-    );
+    setTestingPush(true);
+    try {
+      await triggerServerPushTest();
+    } finally {
+      setTestingPush(false);
+    }
   };
 
   const items = notifikasiState?.items || [];
@@ -187,11 +189,12 @@ export default function NotifikasiPage({
           ) : notifPerm === 'granted' ? (
             <button
               type="button"
+              disabled={testingPush}
               onClick={handleTestPopup}
-              className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold cursor-pointer flex items-center gap-1.5"
+              className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 text-white text-xs font-bold cursor-pointer flex items-center gap-1.5"
             >
               <span className="material-symbols-outlined text-[16px]">send</span>
-              Tes Pop-up Sekarang
+              {testingPush ? 'Mengirim Push...' : 'Tes Pop-up Sekarang'}
             </button>
           ) : notifPerm === 'default' ? (
             <button

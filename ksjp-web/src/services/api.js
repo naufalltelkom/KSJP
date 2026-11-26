@@ -126,3 +126,18 @@ export function markNotifikasiRead(id) {
 export function markAllNotifikasiRead() {
   return apiRequest('/notifikasi/read-all', { method: 'POST' });
 }
+
+export function fetchVapidPublicKey() {
+  return apiRequest('/push/vapid-public-key', { requiresAuth: false });
+}
+
+export function subscribeWebPushApi(subscription) {
+  return apiRequest('/push/subscribe', {
+    method: 'POST',
+    body: subscription,
+  });
+}
+
+export function sendTestWebPushApi() {
+  return apiRequest('/push/test', { method: 'POST' });
+}

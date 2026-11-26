@@ -14,7 +14,10 @@ import {
   markAllNotifikasiRead,
   markNotifikasiRead,
 } from './services/api';
-import { showOsPopupNotification } from './utils/notifications';
+import {
+  showOsPopupNotification,
+  syncExistingPushSubscription,
+} from './utils/notifications';
 
 function PortalShell() {
   const { isAuthenticated, initializing } = useAuth();
@@ -115,17 +118,32 @@ function PortalShell() {
     }
 
     loadAllData();
+    syncExistingPushSubscription();
 
-    const interval = setInterval(() => {
+    const pollNow = () => {
       loadNotifikasi(true);
       fetchJadwal({ mode: 'harian' })
         .then((res) => {
           setJadwalData({ harian: res?.data || null, kelas: res?.kelas || null });
         })
         .catch(() => {});
-    }, 30000);
+    };
 
-    return () => clearInterval(interval);
+    const interval = setInterval(pollNow, 10000);
+    const handleResume = () => {
+      if (document.visibilityState === 'visible') {
+        pollNow();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleResume);
+    window.addEventListener('focus', pollNow);
+
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleResume);
+      window.removeEventListener('focus', pollNow);
+    };
   }, [isAuthenticated, loadAllData, loadNotifikasi]);
 
   useEffect(() => {
