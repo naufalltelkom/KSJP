@@ -51,10 +51,10 @@ export default function NotifikasiPage({
     setNotifPerm(status);
   };
 
-  const handleTestPopup = async () => {
+  const handleTestPopup = async (mode = 'default') => {
     setTestingPush(true);
     try {
-      await triggerServerPushTest();
+      await triggerServerPushTest(mode);
     } finally {
       setTestingPush(false);
     }
@@ -120,7 +120,7 @@ export default function NotifikasiPage({
             </div>
             <div>
               <div className="text-xs font-bold uppercase tracking-wider text-emerald-100">
-                Pengingat Pergantian Jam Real-time • Server {formatJamPendek(pergantian.waktu_server)} WIB
+                {pergantian.peringatan_judul || 'Pengingat Pergantian Jam Real-time'} • Server {formatJamPendek(pergantian.waktu_server)} WIB
               </div>
               <div className="text-base font-extrabold mt-0.5">
                 {pergantian.pesan_pengingat ||
@@ -187,15 +187,33 @@ export default function NotifikasiPage({
               Pasang di iOS Dulu
             </button>
           ) : notifPerm === 'granted' ? (
-            <button
-              type="button"
-              disabled={testingPush}
-              onClick={handleTestPopup}
-              className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 text-white text-xs font-bold cursor-pointer flex items-center gap-1.5"
-            >
-              <span className="material-symbols-outlined text-[16px]">send</span>
-              {testingPush ? 'Mengirim Push...' : 'Tes Pop-up Sekarang'}
-            </button>
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                disabled={testingPush}
+                onClick={() => handleTestPopup('segera_selesai')}
+                className="px-3 py-2 rounded-xl bg-amber-100 hover:bg-amber-200 disabled:opacity-60 text-amber-900 text-xs font-bold cursor-pointer"
+              >
+                Simulasi -10m
+              </button>
+              <button
+                type="button"
+                disabled={testingPush}
+                onClick={() => handleTestPopup('pergantian')}
+                className="px-3 py-2 rounded-xl bg-primary-fixed hover:bg-primary-fixed/80 disabled:opacity-60 text-on-primary-fixed text-xs font-bold cursor-pointer"
+              >
+                Simulasi -5m
+              </button>
+              <button
+                type="button"
+                disabled={testingPush}
+                onClick={() => handleTestPopup('default')}
+                className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 text-white text-xs font-bold cursor-pointer flex items-center gap-1.5"
+              >
+                <span className="material-symbols-outlined text-[16px]">send</span>
+                {testingPush ? 'Mengirim...' : 'Tes Pop-up'}
+              </button>
+            </div>
           ) : notifPerm === 'default' ? (
             <button
               type="button"

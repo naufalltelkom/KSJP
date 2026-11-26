@@ -131,18 +131,140 @@ export async function requestOsNotificationPermission() {
   return result;
 }
 
-export async function triggerServerPushTest() {
+export async function triggerServerPushTest(mode = 'default') {
   const subscribed = await registerWebPushSubscription();
   if (subscribed) {
-    const res = await sendTestWebPushApi().catch(() => null);
+    const res = await sendTestWebPushApi(mode).catch(() => null);
     if (res?.sent > 0) {
       return { via: 'webpush', ok: true };
     }
   }
+
+  const fallback =
+    mode === 'segera_selesai'
+      ? {
+          title: 'Sebentar lagi selesai pelajaran Bahasa Indonesia',
+          body: 'Sebentar lagi selesai pelajaran Bahasa Indonesia (10 menit lagi, pukul 14:00 WIB). Berikutnya: Kreativitas, Inovasi, dan Kewirausahaan.',
+        }
+      : mode === 'pergantian'
+        ? {
+            title: 'Pergantian Pelajaran dan Ruangan',
+            body: 'Pergantian Pelajaran dan Ruangan dalam 5 menit (14:00 WIB): Kreativitas, Inovasi, dan Kewirausahaan • Ruang B.2.2 • Guru: Tutut Destria Eliana.',
+          }
+        : {
+            title: 'Tes Notifikasi KSJP Stematel',
+            body: 'Notifikasi pop-up berhasil tampil di perangkat Anda.',
+          };
+
   const localOk = await showOsPopupNotification(
-    'Tes Notifikasi KSJP Stematel',
-    'Notifikasi pop-up berhasil tampil di perangkat Anda.',
-    `ksjp-test-${Date.now()}`
+    fallback.title,
+    fallback.body,
+    `ksjp-test-${mode}-${Date.now()}`
   );
   return { via: 'local', ok: localOk };
+}
+
+function parseWibTodaySeconds(timeStr) {
+  const [h = 0, m = 0, s = 0] = String(timeStr || '00:00:00')
+    .split(':')
+    .map(Number);
+  return h * 3600 + m * 60 + s;
+}
+
+function getWibNowParts() {
+  const now = new Date();
+  const fmt = new Intl.DateTimeFormat('en-GB', {
+    timeZone: 'Asia/Jakarta',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false,
+  });
+  const parts = Object.fromEntries(fmt.formatToParts(now).map((p) => [p.type, p.value]));
+  const dateStr = `${parts.year}-${parts.month}-${parts.day}`;
+  const secOfDay = Number(parts.hour) * 3600 + Number(parts.minute) * 60 + Number(parts.second);
+  return { dateStr, secOfDay };
+}
+
+/**
+ * Evaluasi timer lokal per 5 detik untuk notifikasi -10 menit & -5 menit sesuai waktu nyata WIB.
+ */
+export function evaluateLocalBellAlert(harian) {
+  if (!harian || harian.is_libur || !Array.isArray(harian.jadwal) || harian.jadwal.length === 0) {
+    return null;
+  }
+
+  const { dateStr, secOfDay } = getWibNowParts();
+  if (harian.tanggal !== dateStr) {
+    return null;
+  }
+
+  let slotAktif = null;
+  let slotBerikutnya = null;
+
+  for (const slot of harian.jadwal) {
+    const startSec = parseWibTodaySeconds(slot.jam_mulai);
+    const endSec = parseWibTodaySeconds(slot.jam_selesai);
+    if (secOfDay >= startSec && secOfDay < endSec) {
+      slotAktif = slot;
+    } else if (!slotBerikutnya && startSec > secOfDay) {
+      slotBerikutnya = slot;
+    }
+  }
+
+  if (slotAktif) {
+    const endSec = parseWibTodaySeconds(slotAktif.jam_selesai);
+    const sisaMenit = Math.max(0, Math.ceil((endSec - secOfDay) / 60));
+
+    if (sisaMenit <= 5) {
+      const jamNext = String(slotBerikutnya?.jam_mulai || slotAktif.jam_selesai).slice(0, 5);
+      const ref = String(slotBerikutnya?.jam_mulai || slotAktif.jam_selesai).replace(/[^0-9]/g, '');
+      return {
+        key: `${dateStr}_5m_${ref}`,
+        title: 'Pergantian Pelajaran dan Ruangan',
+        body: slotBerikutnya
+          ? `Pergantian Pelajaran dan Ruangan dalam ${sisaMenit} menit (${jamNext} WIB): ${slotBerikutnya.mata_pelajaran} • Ruang ${slotBerikutnya.ruangan} • Guru: ${slotBerikutnya.nama_guru}.`
+          : `Pelajaran ${slotAktif.mata_pelajaran} selesai dalam ${sisaMenit} menit (${jamNext} WIB).`,
+      };
+    }
+
+    if (sisaMenit <= 10) {
+      const jamEnd = String(slotAktif.jam_selesai).slice(0, 5);
+      const ref = String(slotAktif.jam_selesai).replace(/[^0-9]/g, '');
+      return {
+        key: `${dateStr}_10m_${ref}`,
+        title: `Sebentar lagi selesai pelajaran ${slotAktif.mata_pelajaran}`,
+        body: `Sebentar lagi selesai pelajaran ${slotAktif.mata_pelajaran} (${sisaMenit} menit lagi, pukul ${jamEnd} WIB).${
+          slotBerikutnya
+            ? ` Berikutnya: ${slotBerikutnya.mata_pelajaran} (Ruang ${slotBerikutnya.ruangan}).`
+            : ''
+        }`,
+      };
+    }
+  } else if (slotBerikutnya) {
+    const startSec = parseWibTodaySeconds(slotBerikutnya.jam_mulai);
+    const menitMenuju = Math.max(0, Math.ceil((startSec - secOfDay) / 60));
+    const jamNext = String(slotBerikutnya.jam_mulai).slice(0, 5);
+    const ref = String(slotBerikutnya.jam_mulai).replace(/[^0-9]/g, '');
+
+    if (menitMenuju <= 5) {
+      return {
+        key: `${dateStr}_5m_${ref}`,
+        title: 'Pergantian Pelajaran dan Ruangan',
+        body: `Pergantian Pelajaran dan Ruangan dalam ${menitMenuju} menit (${jamNext} WIB): ${slotBerikutnya.mata_pelajaran} • Ruang ${slotBerikutnya.ruangan} • Guru: ${slotBerikutnya.nama_guru}.`,
+      };
+    }
+    if (menitMenuju <= 10) {
+      return {
+        key: `${dateStr}_10m_${ref}`,
+        title: `Sebentar lagi mulai ${slotBerikutnya.mata_pelajaran}`,
+        body: `Sebentar lagi masuk ${slotBerikutnya.mata_pelajaran} dalam ${menitMenuju} menit (${jamNext} WIB) di Ruang ${slotBerikutnya.ruangan}.`,
+      };
+    }
+  }
+
+  return null;
 }

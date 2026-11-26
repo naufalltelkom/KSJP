@@ -74,16 +74,41 @@ class PushSubscriptionController extends Controller
 
     public function test(Request $request, WebPushService $webPushService): JsonResponse
     {
+        $validated = $request->validate([
+            'mode' => ['nullable', 'in:default,segera_selesai,pergantian'],
+        ]);
+
         /** @var User $user */
         $user = $request->user();
-        $sent = $webPushService->sendTestToUser($user);
+        $mode = $validated['mode'] ?? 'default';
+        $sent = $webPushService->sendTestToUser($user, $mode);
 
         return response()->json([
             'success' => true,
             'sent' => $sent,
+            'mode' => $mode,
             'message' => $sent > 0
                 ? 'Push real-time berhasil dikirim ke perangkat terdaftar.'
                 : 'Belum ada subscription push aktif untuk akun ini atau VAPID key belum diset.',
+        ]);
+    }
+
+    public function runBellReminder(Request $request, WebPushService $webPushService): JsonResponse
+    {
+        $secret = env('CRON_SECRET');
+        if (filled($secret)) {
+            $token = $request->bearerToken() ?: $request->query('secret');
+            if ($token !== $secret) {
+                return response()->json(['success' => false, 'message' => 'Unauthorized'], 401);
+            }
+        }
+
+        $result = $webPushService->dispatchBellReminders();
+
+        return response()->json([
+            'success' => true,
+            'waktu_wib' => now('Asia/Jakarta')->format('Y-m-d H:i:s'),
+            'data' => $result,
         ]);
     }
 }

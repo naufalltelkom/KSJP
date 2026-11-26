@@ -5,7 +5,9 @@ namespace App\Services;
 use App\Models\Notifikasi;
 use App\Models\PushSubscription;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Minishlink\WebPush\Subscription;
 use Minishlink\WebPush\WebPush;
@@ -49,7 +51,7 @@ class WebPushService
         ]);
     }
 
-    public function sendTestToUser(User $user): int
+    public function sendTestToUser(User $user, string $mode = 'default'): int
     {
         if (! $this->isConfigured()) {
             return 0;
@@ -60,13 +62,120 @@ class WebPushService
             return 0;
         }
 
-        return $this->dispatchBatch($subscriptions, [
-            'title' => 'Tes Push Real-Time KSJP',
-            'body' => "Halo {$user->nama_lengkap}, notifikasi langsung Android & iOS aktif!",
-            'tag' => 'ksjp-test-' . now()->timestamp,
-            'tipe' => 'pengumuman',
-            'url' => '/',
-        ]);
+        $payload = match ($mode) {
+            'segera_selesai' => [
+                'title' => 'Sebentar lagi selesai pelajaran Bahasa Indonesia',
+                'body' => 'Sebentar lagi selesai pelajaran Bahasa Indonesia (10 menit lagi, pukul 14:00 WIB). Berikutnya: Kreativitas, Inovasi, dan Kewirausahaan.',
+                'tag' => 'ksjp-sim-10m-' . now()->timestamp,
+                'tipe' => 'pergantian_jam',
+                'url' => '/',
+            ],
+            'pergantian' => [
+                'title' => 'Pergantian Pelajaran dan Ruangan',
+                'body' => 'Pergantian Pelajaran dan Ruangan dalam 5 menit (14:00 WIB): Kreativitas, Inovasi, dan Kewirausahaan • Ruang B.2.2 • Guru: Tutut Destria Eliana.',
+                'tag' => 'ksjp-sim-5m-' . now()->timestamp,
+                'tipe' => 'pergantian_jam',
+                'url' => '/',
+            ],
+            default => [
+                'title' => 'Tes Push Real-Time KSJP',
+                'body' => "Halo {$user->nama_lengkap}, notifikasi langsung Android & iOS aktif!",
+                'tag' => 'ksjp-test-' . now()->timestamp,
+                'tipe' => 'pengumuman',
+                'url' => '/',
+            ],
+        };
+
+        return $this->dispatchBatch($subscriptions, $payload);
+    }
+
+    /**
+     * Memeriksa seluruh kelas yang memiliki subscriber dan mengirim push -10 menit / -5 menit saat waktunya tiba.
+     *
+     * @return array{checked_classes: int, pushes_sent: int, alerts: array<int, array<string, mixed>>}
+     */
+    public function dispatchBellReminders(?Carbon $now = null): array
+    {
+        if (! $this->isConfigured()) {
+            return ['checked_classes' => 0, 'pushes_sent' => 0, 'alerts' => []];
+        }
+
+        $sekarang = ($now ?? Carbon::now('Asia/Jakarta'))->copy()->setTimezone('Asia/Jakarta');
+        $jadwalService = app(JadwalService::class);
+        $kelasIds = PushSubscription::whereNotNull('id_kelas')
+            ->distinct()
+            ->pluck('id_kelas');
+
+        $totalSent = 0;
+        $alerts = [];
+
+        foreach ($kelasIds as $kelasId) {
+            $harian = $jadwalService->getJadwalHarian((int) $kelasId, $sekarang);
+            if ($harian['is_libur'] ?? false) {
+                continue;
+            }
+
+            $bell = $harian['pergantian_jam'] ?? null;
+            if (! is_array($bell) || ! ($bell['pengingat_aktif'] ?? false)) {
+                continue;
+            }
+
+            $jenis = (string) ($bell['peringatan_jenis'] ?? '');
+            $judul = (string) ($bell['peringatan_judul'] ?? 'Pengingat Pergantian Jam KSJP');
+            $pesan = (string) ($bell['pesan_pengingat'] ?? '');
+            if ($jenis === '' || $pesan === '') {
+                continue;
+            }
+
+            $slotRef = $jenis === 'pergantian_pelajaran'
+                ? ($bell['slot_berikutnya']['jam_mulai'] ?? $bell['slot_aktif']['jam_selesai'] ?? 'end')
+                : ($bell['slot_aktif']['jam_selesai'] ?? $bell['slot_berikutnya']['jam_mulai'] ?? 'slot');
+
+            $dedupKey = sprintf(
+                'ksjp_bell_%s_%d_%s_%s',
+                $sekarang->toDateString(),
+                (int) $kelasId,
+                $jenis,
+                preg_replace('/[^a-zA-Z0-9]/', '', (string) $slotRef),
+            );
+
+            try {
+                if (! Cache::store('database')->add($dedupKey, true, now()->addHours(12))) {
+                    continue;
+                }
+            } catch (\Throwable) {
+                if (! Cache::add($dedupKey, true, now()->addHours(12))) {
+                    continue;
+                }
+            }
+
+            $subscriptions = PushSubscription::where('id_kelas', $kelasId)->get();
+            if ($subscriptions->isEmpty()) {
+                continue;
+            }
+
+            $sent = $this->dispatchBatch($subscriptions, [
+                'title' => $judul,
+                'body' => $pesan,
+                'tag' => $dedupKey,
+                'tipe' => 'pergantian_jam',
+                'url' => '/',
+            ]);
+
+            $totalSent += $sent;
+            $alerts[] = [
+                'id_kelas' => (int) $kelasId,
+                'jenis' => $jenis,
+                'judul' => $judul,
+                'sent' => $sent,
+            ];
+        }
+
+        return [
+            'checked_classes' => $kelasIds->count(),
+            'pushes_sent' => $totalSent,
+            'alerts' => $alerts,
+        ];
     }
 
     /**

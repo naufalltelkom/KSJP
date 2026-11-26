@@ -185,7 +185,7 @@ class JadwalService
             $selesaiTime = Carbon::createFromFormat('H:i:s', $slotAktif['jam_selesai'], $sekarang->timezone);
             if ($selesaiTime !== false) {
                 $selesaiTime->setDate($sekarang->year, $sekarang->month, $sekarang->day);
-                $sisaMenitSelesai = max(0, (int) $sekarang->diffInMinutes($selesaiTime, false));
+                $sisaMenitSelesai = max(0, (int) ceil($sekarang->diffInSeconds($selesaiTime, false) / 60));
             }
         }
 
@@ -194,16 +194,43 @@ class JadwalService
             $mulaiTime = Carbon::createFromFormat('H:i:s', $slotBerikutnya['jam_mulai'], $sekarang->timezone);
             if ($mulaiTime !== false) {
                 $mulaiTime->setDate($sekarang->year, $sekarang->month, $sekarang->day);
-                $menitMenujuBerikutnya = max(0, (int) $sekarang->diffInMinutes($mulaiTime, false));
+                $menitMenujuBerikutnya = max(0, (int) ceil($sekarang->diffInSeconds($mulaiTime, false) / 60));
             }
         }
 
+        $peringatanJenis = null;
+        $peringatanJudul = null;
         $pesanPengingat = null;
-        if ($slotAktif !== null && $sisaMenitSelesai !== null && $sisaMenitSelesai <= 10) {
-            $nextName = $slotBerikutnya['mata_pelajaran'] ?? 'Jam pelajaran berakhir';
-            $pesanPengingat = "Pergantian jam dalam {$sisaMenitSelesai} menit ({$nextName}).";
-        } elseif ($slotAktif === null && $slotBerikutnya !== null && $menitMenujuBerikutnya !== null && $menitMenujuBerikutnya <= 15) {
-            $pesanPengingat = "Kegiatan berikutnya {$slotBerikutnya['mata_pelajaran']} dimulai dalam {$menitMenujuBerikutnya} menit.";
+
+        if ($slotAktif !== null && $sisaMenitSelesai !== null && $sisaMenitSelesai <= 5) {
+            $peringatanJenis = 'pergantian_pelajaran';
+            $peringatanJudul = 'Pergantian Pelajaran dan Ruangan';
+
+            if ($slotBerikutnya !== null) {
+                $jamBerikutnya = substr((string) $slotBerikutnya['jam_mulai'], 0, 5);
+                $pesanPengingat = "Pergantian Pelajaran dan Ruangan dalam {$sisaMenitSelesai} menit ({$jamBerikutnya} WIB): {$slotBerikutnya['mata_pelajaran']} • Ruang {$slotBerikutnya['ruangan']} • Guru: {$slotBerikutnya['nama_guru']}.";
+            } else {
+                $jamSelesai = substr((string) $slotAktif['jam_selesai'], 0, 5);
+                $pesanPengingat = "Pelajaran {$slotAktif['mata_pelajaran']} selesai dalam {$sisaMenitSelesai} menit ({$jamSelesai} WIB).";
+            }
+        } elseif ($slotAktif !== null && $sisaMenitSelesai !== null && $sisaMenitSelesai <= 10) {
+            $peringatanJenis = 'segera_selesai';
+            $peringatanJudul = "Sebentar lagi selesai pelajaran {$slotAktif['mata_pelajaran']}";
+            $jamSelesai = substr((string) $slotAktif['jam_selesai'], 0, 5);
+            $pesanPengingat = "Sebentar lagi selesai pelajaran {$slotAktif['mata_pelajaran']} ({$sisaMenitSelesai} menit lagi, pukul {$jamSelesai} WIB).";
+            if ($slotBerikutnya !== null) {
+                $pesanPengingat .= " Berikutnya: {$slotBerikutnya['mata_pelajaran']} (Ruang {$slotBerikutnya['ruangan']}).";
+            }
+        } elseif ($slotAktif === null && $slotBerikutnya !== null && $menitMenujuBerikutnya !== null && $menitMenujuBerikutnya <= 5) {
+            $peringatanJenis = 'pergantian_pelajaran';
+            $peringatanJudul = 'Pergantian Pelajaran dan Ruangan';
+            $jamBerikutnya = substr((string) $slotBerikutnya['jam_mulai'], 0, 5);
+            $pesanPengingat = "Pergantian Pelajaran dan Ruangan dalam {$menitMenujuBerikutnya} menit ({$jamBerikutnya} WIB): {$slotBerikutnya['mata_pelajaran']} • Ruang {$slotBerikutnya['ruangan']} • Guru: {$slotBerikutnya['nama_guru']}.";
+        } elseif ($slotAktif === null && $slotBerikutnya !== null && $menitMenujuBerikutnya !== null && $menitMenujuBerikutnya <= 10) {
+            $peringatanJenis = 'segera_selesai';
+            $peringatanJudul = "Sebentar lagi mulai {$slotBerikutnya['mata_pelajaran']}";
+            $jamBerikutnya = substr((string) $slotBerikutnya['jam_mulai'], 0, 5);
+            $pesanPengingat = "Sebentar lagi masuk {$slotBerikutnya['mata_pelajaran']} dalam {$menitMenujuBerikutnya} menit ({$jamBerikutnya} WIB) di Ruang {$slotBerikutnya['ruangan']}.";
         }
 
         return [
@@ -213,6 +240,8 @@ class JadwalService
             'sisa_menit_jam_aktif' => $sisaMenitSelesai,
             'menit_menuju_jam_berikutnya' => $menitMenujuBerikutnya,
             'pengingat_aktif' => $pesanPengingat !== null,
+            'peringatan_jenis' => $peringatanJenis,
+            'peringatan_judul' => $peringatanJudul,
             'pesan_pengingat' => $pesanPengingat,
         ];
     }

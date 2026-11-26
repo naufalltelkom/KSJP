@@ -15,6 +15,7 @@ import {
   markNotifikasiRead,
 } from './services/api';
 import {
+  evaluateLocalBellAlert,
   showOsPopupNotification,
   syncExistingPushSubscription,
 } from './utils/notifications';
@@ -64,20 +65,18 @@ function PortalShell() {
       const bell = res?.pengingat_pergantian_jam;
       if (bell?.pengingat_aktif && bell?.pesan_pengingat) {
         const todayStr = new Date().toISOString().slice(0, 10);
-        const bellKey = `${todayStr}-${bell.slot_aktif?.id || 'x'}-${bell.slot_berikutnya?.id || 'y'}`;
+        const bellStage = bell.peringatan_jenis || 'bell';
+        const bellKey = `${todayStr}-${bellStage}-${bell.slot_aktif?.id || 'x'}-${bell.slot_berikutnya?.id || 'y'}`;
         if (lastBellKeyRef.current !== bellKey) {
           lastBellKeyRef.current = bellKey;
+          const bellTitle = bell.peringatan_judul || 'Pengingat Pergantian Jam KSJP';
           if (showToastOnNew) {
             setToast({
-              title: 'Pengingat Pergantian Jam',
+              title: bellTitle,
               message: bell.pesan_pengingat,
             });
           }
-          showOsPopupNotification(
-            'Pengingat Pergantian Jam KSJP',
-            bell.pesan_pengingat,
-            `ksjp-bell-${bellKey}`
-          );
+          showOsPopupNotification(bellTitle, bell.pesan_pengingat, `ksjp-bell-${bellKey}`);
         }
       }
 
@@ -151,6 +150,27 @@ function PortalShell() {
     const timer = setTimeout(() => setToast(null), 7000);
     return () => clearTimeout(timer);
   }, [toast]);
+
+  // Evaluasi presisi tiap 5 detik untuk pengingat -10 menit ("Sebentar lagi selesai...") & -5 menit ("Pergantian Pelajaran & Ruangan")
+  useEffect(() => {
+    if (!isAuthenticated || !jadwalData?.harian) return undefined;
+
+    const checkBell = () => {
+      const alert = evaluateLocalBellAlert(jadwalData.harian);
+      if (!alert) return;
+
+      const storageKey = `ksjp_bell_sent_${alert.key}`;
+      if (localStorage.getItem(storageKey)) return;
+
+      localStorage.setItem(storageKey, '1');
+      setToast({ title: alert.title, message: alert.body });
+      showOsPopupNotification(alert.title, alert.body, `ksjp-bell-${alert.key}`);
+    };
+
+    checkBell();
+    const bellTimer = setInterval(checkBell, 5000);
+    return () => clearInterval(bellTimer);
+  }, [isAuthenticated, jadwalData]);
 
   const handleMarkRead = async (id) => {
     await markNotifikasiRead(id);

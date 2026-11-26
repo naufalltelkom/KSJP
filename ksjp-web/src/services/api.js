@@ -138,6 +138,9 @@ export function subscribeWebPushApi(subscription) {
   });
 }
 
-export function sendTestWebPushApi() {
-  return apiRequest('/push/test', { method: 'POST' });
+export function sendTestWebPushApi(mode = 'default') {
+  return apiRequest('/push/test', {
+    method: 'POST',
+    body: { mode },
+  });
 }

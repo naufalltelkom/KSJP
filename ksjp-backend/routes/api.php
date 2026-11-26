@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::post('/login', [AuthController::class, 'login']);
 Route::get('/push/vapid-public-key', [PushSubscriptionController::class, 'vapidPublicKey']);
+Route::match(['get', 'post'], '/cron/bell-reminder', [PushSubscriptionController::class, 'runBellReminder']);
 
 Route::middleware('auth:sanctum')->group(function (): void {
     Route::get('/me', [AuthController::class, 'me']);

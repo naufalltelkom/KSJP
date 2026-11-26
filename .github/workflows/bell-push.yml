@@ -1,0 +1,16 @@
+name: KSJP Bell Reminder Push
+
+on:
+  schedule:
+    # Setiap 5 menit Senin-Jumat 06:00-16:30 WIB (23:00-09:30 UTC)
+    - cron: '*/5 23 * * 0-4'
+    - cron: '*/5 0-9 * * 1-5'
+  workflow_dispatch:
+
+jobs:
+  trigger-bell-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Laravel Bell Reminder Push Endpoint
+        run: |
+          curl -fsS -m 25 "https://ksjp-stematel-api.vercel.app/api/cron/bell-reminder"

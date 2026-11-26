@@ -394,4 +394,46 @@ class KsjpApiAndRbacTest extends TestCase
             'id_kelas' => $siswa->id_kelas,
         ]);
     }
+
+    public function test_live_bell_reminder_fires_10_minute_and_5_minute_stages_accurately(): void
+    {
+        $siswa = User::where('nis', '541251216')->firstOrFail();
+        $token = $siswa->createToken('bell-test')->plainTextToken;
+
+        // Rabu 2 Des 2026: jam 13:20-14:00 Bahasa Indonesia, lalu 14:00-14:40 Kreativitas, Inovasi, dan Kewirausahaan
+        // 1) Uji 10 menit sebelum selesai (13:50:00 WIB) -> "Sebentar lagi selesai pelajaran ..."
+        Carbon::setTestNow(Carbon::parse('2026-12-02 13:50:00', 'Asia/Jakarta'));
+        try {
+            $res10 = $this->withHeader('Authorization', "Bearer {$token}")
+                ->getJson('/api/jadwal?tanggal=2026-12-02')
+                ->assertOk();
+
+            $res10->assertJsonPath('data.pergantian_jam.pengingat_aktif', true)
+                ->assertJsonPath('data.pergantian_jam.peringatan_jenis', 'segera_selesai')
+                ->assertJsonPath('data.pergantian_jam.peringatan_judul', 'Sebentar lagi selesai pelajaran Bahasa Indonesia');
+        } finally {
+            Carbon::setTestNow();
+        }
+
+        // 2) Uji 5 menit sebelum pergantian jam (13:55:00 WIB) -> "Pergantian Pelajaran dan Ruangan"
+        Carbon::setTestNow(Carbon::parse('2026-12-02 13:55:00', 'Asia/Jakarta'));
+        try {
+            $res5 = $this->withHeader('Authorization', "Bearer {$token}")
+                ->getJson('/api/jadwal?tanggal=2026-12-02')
+                ->assertOk();
+
+            $res5->assertJsonPath('data.pergantian_jam.pengingat_aktif', true)
+                ->assertJsonPath('data.pergantian_jam.peringatan_jenis', 'pergantian_pelajaran')
+                ->assertJsonPath('data.pergantian_jam.peringatan_judul', 'Pergantian Pelajaran dan Ruangan');
+
+            $this->assertStringContainsString(
+                'Kreativitas, Inovasi, dan Kewirausahaan',
+                (string) $res5->json('data.pergantian_jam.pesan_pengingat'),
+            );
+
+            $this->getJson('/api/cron/bell-reminder')->assertOk()->assertJsonPath('success', true);
+        } finally {
+            Carbon::setTestNow();
+        }
+    }
 }
