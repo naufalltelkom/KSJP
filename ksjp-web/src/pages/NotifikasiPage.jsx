@@ -191,6 +191,14 @@ export default function NotifikasiPage({
               <button
                 type="button"
                 disabled={testingPush}
+                onClick={() => handleTestPopup('jam_masuk')}
+                className="px-3 py-2 rounded-xl bg-blue-50 hover:bg-blue-100 disabled:opacity-60 text-blue-800 text-xs font-bold cursor-pointer"
+              >
+                Simulasi Masuk
+              </button>
+              <button
+                type="button"
+                disabled={testingPush}
                 onClick={() => handleTestPopup('segera_selesai')}
                 className="px-3 py-2 rounded-xl bg-amber-100 hover:bg-amber-200 disabled:opacity-60 text-amber-900 text-xs font-bold cursor-pointer"
               >
@@ -203,6 +211,14 @@ export default function NotifikasiPage({
                 className="px-3 py-2 rounded-xl bg-primary-fixed hover:bg-primary-fixed/80 disabled:opacity-60 text-on-primary-fixed text-xs font-bold cursor-pointer"
               >
                 Simulasi -5m
+              </button>
+              <button
+                type="button"
+                disabled={testingPush}
+                onClick={() => handleTestPopup('sesi_terakhir')}
+                className="px-3 py-2 rounded-xl bg-purple-50 hover:bg-purple-100 disabled:opacity-60 text-purple-800 text-xs font-bold cursor-pointer"
+              >
+                Simulasi Pulang
               </button>
               <button
                 type="button"

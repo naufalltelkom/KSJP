@@ -267,19 +267,19 @@ class JadwalPelajaranSeeder extends Seeder
             ],
             [
                 'hari' => 'Jumat', 'jam_ke' => 10, 'jam_mulai' => '12:50:00', 'jam_selesai' => '13:30:00',
-                'mata_pelajaran' => 'Bahasa Inggris', 'nama_guru' => 'Okky', 'id_guru' => null, 'ruangan' => 'A.3.4',
+                'mata_pelajaran' => 'Bahasa Inggris', 'nama_guru' => 'Oki Andrianto', 'id_guru' => null, 'ruangan' => 'A.3.4',
             ],
             [
                 'hari' => 'Jumat', 'jam_ke' => 11, 'jam_mulai' => '13:30:00', 'jam_selesai' => '14:10:00',
-                'mata_pelajaran' => 'Bahasa Inggris', 'nama_guru' => 'Okky', 'id_guru' => null, 'ruangan' => 'A.3.4',
+                'mata_pelajaran' => 'Bahasa Inggris', 'nama_guru' => 'Oki Andrianto', 'id_guru' => null, 'ruangan' => 'A.3.4',
             ],
             [
                 'hari' => 'Jumat', 'jam_ke' => 12, 'jam_mulai' => '14:10:00', 'jam_selesai' => '14:50:00',
-                'mata_pelajaran' => 'Bahasa Inggris', 'nama_guru' => 'Okky', 'id_guru' => null, 'ruangan' => 'A.3.4',
+                'mata_pelajaran' => 'Bahasa Inggris', 'nama_guru' => 'Oki Andrianto', 'id_guru' => null, 'ruangan' => 'A.3.4',
             ],
             [
                 'hari' => 'Jumat', 'jam_ke' => 13, 'jam_mulai' => '14:50:00', 'jam_selesai' => '15:30:00',
-                'mata_pelajaran' => 'Bahasa Inggris', 'nama_guru' => 'Okky', 'id_guru' => null, 'ruangan' => 'A.3.4',
+                'mata_pelajaran' => 'Bahasa Inggris', 'nama_guru' => 'Oki Andrianto', 'id_guru' => null, 'ruangan' => 'A.3.4',
             ],
         ];
 

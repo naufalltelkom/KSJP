@@ -198,39 +198,46 @@ class JadwalService
             }
         }
 
+        $slotPertamaHariIni = $jadwalHariIni[0] ?? null;
+        $isMenjelangSesiPertama = $slotAktif === null
+            && $slotBerikutnya !== null
+            && $slotPertamaHariIni !== null
+            && ($slotBerikutnya['jam_mulai'] ?? null) === ($slotPertamaHariIni['jam_mulai'] ?? null);
+        $isSesiTerakhir = $slotAktif !== null && $slotBerikutnya === null;
+
         $peringatanJenis = null;
         $peringatanJudul = null;
         $pesanPengingat = null;
 
-        if ($slotAktif !== null && $sisaMenitSelesai !== null && $sisaMenitSelesai <= 5) {
+        if ($isMenjelangSesiPertama && $menitMenujuBerikutnya !== null && $menitMenujuBerikutnya <= 10 && $menitMenujuBerikutnya >= 1) {
+            // 3. Pengingat Jam Masuk (10 menit sebelum sesi 1 mulai, misal 06:50 sebelum 07:00)
+            $peringatanJenis = 'jam_masuk';
+            $peringatanJudul = 'Pengingat Jam Masuk';
+            $jamMasuk = substr((string) $slotBerikutnya['jam_mulai'], 0, 5);
+            $pesanPengingat = "{$menitMenujuBerikutnya} menit lagi jam masuk / sesi 1 mulai ({$jamMasuk} WIB): {$slotBerikutnya['mata_pelajaran']} • Ruang {$slotBerikutnya['ruangan']}.";
+        } elseif ($isSesiTerakhir && $sisaMenitSelesai !== null && $sisaMenitSelesai <= 10 && $sisaMenitSelesai >= 1) {
+            // 4. Sesi Terakhir Akan Selesai / Jam Pulang (10 menit sebelum selesai, termasuk Ekskul hari Kamis)
+            $peringatanJenis = 'sesi_terakhir';
+            $peringatanJudul = 'Sesi Terakhir Akan Selesai';
+            $jamPulang = substr((string) $slotAktif['jam_selesai'], 0, 5);
+            $pesanPengingat = "Sesi terakhir ({$slotAktif['mata_pelajaran']}) akan selesai dalam {$sisaMenitSelesai} menit (jam pulang pukul {$jamPulang} WIB).";
+        } elseif ($slotAktif !== null && $slotBerikutnya !== null && $sisaMenitSelesai !== null && $sisaMenitSelesai <= 5 && $sisaMenitSelesai >= 1) {
+            // 2. Pergantian Pelajaran dan Ruangan (5 menit sebelum berganti)
             $peringatanJenis = 'pergantian_pelajaran';
             $peringatanJudul = 'Pergantian Pelajaran dan Ruangan';
-
-            if ($slotBerikutnya !== null) {
-                $jamBerikutnya = substr((string) $slotBerikutnya['jam_mulai'], 0, 5);
-                $pesanPengingat = "Pergantian Pelajaran dan Ruangan dalam {$sisaMenitSelesai} menit ({$jamBerikutnya} WIB): {$slotBerikutnya['mata_pelajaran']} • Ruang {$slotBerikutnya['ruangan']} • Guru: {$slotBerikutnya['nama_guru']}.";
-            } else {
-                $jamSelesai = substr((string) $slotAktif['jam_selesai'], 0, 5);
-                $pesanPengingat = "Pelajaran {$slotAktif['mata_pelajaran']} selesai dalam {$sisaMenitSelesai} menit ({$jamSelesai} WIB).";
-            }
-        } elseif ($slotAktif !== null && $sisaMenitSelesai !== null && $sisaMenitSelesai <= 10) {
+            $jamBerikutnya = substr((string) $slotBerikutnya['jam_mulai'], 0, 5);
+            $pesanPengingat = "Pergantian Pelajaran dan Ruangan dalam {$sisaMenitSelesai} menit ({$jamBerikutnya} WIB): {$slotBerikutnya['mata_pelajaran']} • Ruang {$slotBerikutnya['ruangan']} • Guru: {$slotBerikutnya['nama_guru']}.";
+        } elseif ($slotAktif !== null && $slotBerikutnya !== null && $sisaMenitSelesai !== null && $sisaMenitSelesai <= 10 && $sisaMenitSelesai > 5) {
+            // 1. Pelajaran Akan Selesai (10 menit sebelum pelajaran saat ini berakhir)
             $peringatanJenis = 'segera_selesai';
             $peringatanJudul = "Sebentar lagi selesai pelajaran {$slotAktif['mata_pelajaran']}";
             $jamSelesai = substr((string) $slotAktif['jam_selesai'], 0, 5);
-            $pesanPengingat = "Sebentar lagi selesai pelajaran {$slotAktif['mata_pelajaran']} ({$sisaMenitSelesai} menit lagi, pukul {$jamSelesai} WIB).";
-            if ($slotBerikutnya !== null) {
-                $pesanPengingat .= " Berikutnya: {$slotBerikutnya['mata_pelajaran']} (Ruang {$slotBerikutnya['ruangan']}).";
-            }
-        } elseif ($slotAktif === null && $slotBerikutnya !== null && $menitMenujuBerikutnya !== null && $menitMenujuBerikutnya <= 5) {
+            $pesanPengingat = "Sebentar lagi selesai pelajaran {$slotAktif['mata_pelajaran']} ({$sisaMenitSelesai} menit lagi, pukul {$jamSelesai} WIB). Berikutnya: {$slotBerikutnya['mata_pelajaran']} (Ruang {$slotBerikutnya['ruangan']}).";
+        } elseif ($slotAktif === null && $slotBerikutnya !== null && ! $isMenjelangSesiPertama && $menitMenujuBerikutnya !== null && $menitMenujuBerikutnya <= 5 && $menitMenujuBerikutnya >= 1) {
             $peringatanJenis = 'pergantian_pelajaran';
             $peringatanJudul = 'Pergantian Pelajaran dan Ruangan';
             $jamBerikutnya = substr((string) $slotBerikutnya['jam_mulai'], 0, 5);
             $pesanPengingat = "Pergantian Pelajaran dan Ruangan dalam {$menitMenujuBerikutnya} menit ({$jamBerikutnya} WIB): {$slotBerikutnya['mata_pelajaran']} • Ruang {$slotBerikutnya['ruangan']} • Guru: {$slotBerikutnya['nama_guru']}.";
-        } elseif ($slotAktif === null && $slotBerikutnya !== null && $menitMenujuBerikutnya !== null && $menitMenujuBerikutnya <= 10) {
-            $peringatanJenis = 'segera_selesai';
-            $peringatanJudul = "Sebentar lagi mulai {$slotBerikutnya['mata_pelajaran']}";
-            $jamBerikutnya = substr((string) $slotBerikutnya['jam_mulai'], 0, 5);
-            $pesanPengingat = "Sebentar lagi masuk {$slotBerikutnya['mata_pelajaran']} dalam {$menitMenujuBerikutnya} menit ({$jamBerikutnya} WIB) di Ruang {$slotBerikutnya['ruangan']}.";
         }
 
         return [

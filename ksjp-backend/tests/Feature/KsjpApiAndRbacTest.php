@@ -395,13 +395,42 @@ class KsjpApiAndRbacTest extends TestCase
         ]);
     }
 
-    public function test_live_bell_reminder_fires_10_minute_and_5_minute_stages_accurately(): void
+    public function test_live_bell_reminder_fires_all_4_stages_without_saving_to_history_and_friday_teacher_is_oki_andrianto(): void
     {
         $siswa = User::where('nis', '541251216')->firstOrFail();
         $token = $siswa->createToken('bell-test')->plainTextToken;
+        $initialNotifCount = Notifikasi::count();
 
-        // Rabu 2 Des 2026: jam 13:20-14:00 Bahasa Indonesia, lalu 14:00-14:40 Kreativitas, Inovasi, dan Kewirausahaan
-        // 1) Uji 10 menit sebelum selesai (13:50:00 WIB) -> "Sebentar lagi selesai pelajaran ..."
+        // Pastikan guru Bahasa Inggris hari Jumat sudah bernama Oki Andrianto
+        $this->assertDatabaseHas('jadwal_pelajaran', [
+            'hari' => 'Jumat',
+            'mata_pelajaran' => 'Bahasa Inggris',
+            'nama_guru' => 'Oki Andrianto',
+        ]);
+        $this->assertDatabaseMissing('jadwal_pelajaran', [
+            'hari' => 'Jumat',
+            'nama_guru' => 'Okky',
+        ]);
+
+        // 3) Uji Pengingat Jam Masuk Jumat 06:50:00 WIB (10 menit sebelum 07:00 Tadarus)
+        Carbon::setTestNow(Carbon::parse('2026-11-27 06:50:00', 'Asia/Jakarta'));
+        try {
+            $resMasuk = $this->withHeader('Authorization', "Bearer {$token}")
+                ->getJson('/api/jadwal?tanggal=2026-11-27')
+                ->assertOk();
+
+            $resMasuk->assertJsonPath('data.pergantian_jam.pengingat_aktif', true)
+                ->assertJsonPath('data.pergantian_jam.peringatan_jenis', 'jam_masuk')
+                ->assertJsonPath('data.pergantian_jam.peringatan_judul', 'Pengingat Jam Masuk');
+            $this->assertStringContainsString(
+                '10 menit lagi jam masuk / sesi 1 mulai',
+                (string) $resMasuk->json('data.pergantian_jam.pesan_pengingat'),
+            );
+        } finally {
+            Carbon::setTestNow();
+        }
+
+        // 1) Uji 10 menit sebelum pelajaran selesai (Rabu 13:50:00 WIB -> Bahasa Indonesia)
         Carbon::setTestNow(Carbon::parse('2026-12-02 13:50:00', 'Asia/Jakarta'));
         try {
             $res10 = $this->withHeader('Authorization', "Bearer {$token}")
@@ -415,7 +444,7 @@ class KsjpApiAndRbacTest extends TestCase
             Carbon::setTestNow();
         }
 
-        // 2) Uji 5 menit sebelum pergantian jam (13:55:00 WIB) -> "Pergantian Pelajaran dan Ruangan"
+        // 2) Uji 5 menit sebelum pergantian pelajaran (Rabu 13:55:00 WIB -> Kreativitas, Inovasi, dan Kewirausahaan)
         Carbon::setTestNow(Carbon::parse('2026-12-02 13:55:00', 'Asia/Jakarta'));
         try {
             $res5 = $this->withHeader('Authorization', "Bearer {$token}")
@@ -425,7 +454,6 @@ class KsjpApiAndRbacTest extends TestCase
             $res5->assertJsonPath('data.pergantian_jam.pengingat_aktif', true)
                 ->assertJsonPath('data.pergantian_jam.peringatan_jenis', 'pergantian_pelajaran')
                 ->assertJsonPath('data.pergantian_jam.peringatan_judul', 'Pergantian Pelajaran dan Ruangan');
-
             $this->assertStringContainsString(
                 'Kreativitas, Inovasi, dan Kewirausahaan',
                 (string) $res5->json('data.pergantian_jam.pesan_pengingat'),
@@ -435,5 +463,26 @@ class KsjpApiAndRbacTest extends TestCase
         } finally {
             Carbon::setTestNow();
         }
+
+        // 4) Uji Sesi Terakhir Akan Selesai (Kamis 15:50:00 WIB -> Ekskul Prestasi atau Ekskul Sentra)
+        Carbon::setTestNow(Carbon::parse('2026-12-03 15:50:00', 'Asia/Jakarta'));
+        try {
+            $resPulang = $this->withHeader('Authorization', "Bearer {$token}")
+                ->getJson('/api/jadwal?tanggal=2026-12-03')
+                ->assertOk();
+
+            $resPulang->assertJsonPath('data.pergantian_jam.pengingat_aktif', true)
+                ->assertJsonPath('data.pergantian_jam.peringatan_jenis', 'sesi_terakhir')
+                ->assertJsonPath('data.pergantian_jam.peringatan_judul', 'Sesi Terakhir Akan Selesai');
+            $this->assertStringContainsString(
+                'Ekskul Prestasi atau Ekskul Sentra',
+                (string) $resPulang->json('data.pergantian_jam.pesan_pengingat'),
+            );
+        } finally {
+            Carbon::setTestNow();
+        }
+
+        // Pastikan ke-4 notifikasi bel tadi TIDAK pernah masuk ke tabel riwayat notifikasi web/app
+        $this->assertSame($initialNotifCount, Notifikasi::count());
     }
 }

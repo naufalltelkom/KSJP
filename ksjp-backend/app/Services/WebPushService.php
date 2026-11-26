@@ -63,17 +63,31 @@ class WebPushService
         }
 
         $payload = match ($mode) {
+            'jam_masuk' => [
+                'title' => 'Pengingat Jam Masuk',
+                'body' => '10 menit lagi jam masuk / sesi 1 mulai (07:00 WIB): Tadarus • Ruang B.2.2.',
+                'tag' => 'ksjp-sim-masuk-' . now()->timestamp,
+                'tipe' => 'pergantian_jam',
+                'url' => '/',
+            ],
             'segera_selesai' => [
                 'title' => 'Sebentar lagi selesai pelajaran Bahasa Indonesia',
-                'body' => 'Sebentar lagi selesai pelajaran Bahasa Indonesia (10 menit lagi, pukul 14:00 WIB). Berikutnya: Kreativitas, Inovasi, dan Kewirausahaan.',
+                'body' => 'Sebentar lagi selesai pelajaran Bahasa Indonesia (10 menit lagi, pukul 14:00 WIB). Berikutnya: Kreativitas, Inovasi, dan Kewirausahaan (Ruang RPS SEL).',
                 'tag' => 'ksjp-sim-10m-' . now()->timestamp,
                 'tipe' => 'pergantian_jam',
                 'url' => '/',
             ],
             'pergantian' => [
                 'title' => 'Pergantian Pelajaran dan Ruangan',
-                'body' => 'Pergantian Pelajaran dan Ruangan dalam 5 menit (14:00 WIB): Kreativitas, Inovasi, dan Kewirausahaan • Ruang B.2.2 • Guru: Tutut Destria Eliana.',
+                'body' => 'Pergantian Pelajaran dan Ruangan dalam 5 menit (14:00 WIB): Kreativitas, Inovasi, dan Kewirausahaan • Ruang RPS SEL • Guru: Tutut Destria Eliana.',
                 'tag' => 'ksjp-sim-5m-' . now()->timestamp,
+                'tipe' => 'pergantian_jam',
+                'url' => '/',
+            ],
+            'sesi_terakhir' => [
+                'title' => 'Sesi Terakhir Akan Selesai',
+                'body' => 'Sesi terakhir (Ekskul Prestasi atau Ekskul Sentra) akan selesai dalam 10 menit (jam pulang pukul 16:00 WIB).',
+                'tag' => 'ksjp-sim-pulang-' . now()->timestamp,
                 'tipe' => 'pergantian_jam',
                 'url' => '/',
             ],

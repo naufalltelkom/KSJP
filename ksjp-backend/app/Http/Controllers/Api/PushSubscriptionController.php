@@ -75,7 +75,7 @@ class PushSubscriptionController extends Controller
     public function test(Request $request, WebPushService $webPushService): JsonResponse
     {
         $validated = $request->validate([
-            'mode' => ['nullable', 'in:default,segera_selesai,pergantian'],
+            'mode' => ['nullable', 'in:default,jam_masuk,segera_selesai,pergantian,sesi_terakhir'],
         ]);
 
         /** @var User $user */
