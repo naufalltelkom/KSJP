@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">KSJP Stematel</string>
+    <string name="school_name">SMK Telkom Purwokerto</string>
+    <string name="school_year">T.A. 2026/2027</string>
+    <string name="nav_dashboard">Beranda</string>
+    <string name="nav_jadwal">Jadwal</string>
+    <string name="nav_kalender">Kalender</string>
+    <string name="nav_notifikasi">Notifikasi</string>
+    <string name="nav_profil">Profil</string>
+</resources>

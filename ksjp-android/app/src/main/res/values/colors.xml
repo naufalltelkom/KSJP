@@ -1,0 +1,26 @@
+<resources>
+    <!-- Telkom Red & Material 3 Tonal Palette (Google Stitch Reference) -->
+    <color name="telkom_red">#D91E2A</color>
+    <color name="telkom_red_dark">#B10019</color>
+    <color name="telkom_red_soft">#FFDAD7</color>
+    <color name="telkom_red_on_soft">#410004</color>
+
+    <color name="surface_canvas">#F8F9FA</color>
+    <color name="surface_white">#FFFFFF</color>
+    <color name="surface_low">#F3F4F5</color>
+    <color name="surface_container">#EDEEEF</color>
+    <color name="surface_high">#E7E8E9</color>
+
+    <color name="ink_primary">#191C1D</color>
+    <color name="ink_variant">#5C3F3D</color>
+    <color name="ink_secondary">#5E5E67</color>
+    <color name="outline_subtle">#E6BDB9</color>
+
+    <color name="emerald_bg">#ECFDF5</color>
+    <color name="emerald_text">#047857</color>
+    <color name="amber_bg">#FFFBEB</color>
+    <color name="amber_text">#B45309</color>
+    <color name="blue_bg">#EFF6FF</color>
+    <color name="blue_text">#1D4ED8</color>
+    <color name="red_holiday">#BA1A1A</color>
+</resources>

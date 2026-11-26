@@ -1,0 +1,10 @@
+<resources>
+    <style name="Theme.KSJP" parent="Theme.Material3.Light.NoActionBar">
+        <item name="colorPrimary">@color/telkom_red</item>
+        <item name="colorOnPrimary">@color/surface_white</item>
+        <item name="colorPrimaryContainer">@color/telkom_red_soft</item>
+        <item name="colorOnPrimaryContainer">@color/telkom_red_on_soft</item>
+        <item name="android:statusBarColor">@color/telkom_red_dark</item>
+        <item name="android:windowBackground">@color/surface_canvas</item>
+    </style>
+</resources>

@@ -1,0 +1,14 @@
+.DS_Store
+Thumbs.db
+*.log
+.env
+.env.*
+!.env.example
+.vscode/
+.idea/
+node_modules/
+vendor/
+dist/
+.gradle/
+build/
+ksjp-android/local.properties
