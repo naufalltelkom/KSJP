@@ -20,7 +20,11 @@
   ],
   "rewrites": [
     {
-      "source": "/((?!downloads/).*)",
+      "source": "/api/(.*)",
+      "destination": "https://ksjp-stematel-api.vercel.app/api/$1"
+    },
+    {
+      "source": "/((?!downloads/|api/).*)",
       "destination": "/index.html"
     }
   ]

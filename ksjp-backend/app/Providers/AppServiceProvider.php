@@ -7,6 +7,7 @@ use App\Models\KalenderAkademik;
 use App\Observers\JadwalMomentumObserver;
 use App\Observers\KalenderAkademikObserver;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -25,6 +26,10 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Carbon::setLocale('id');
+
+        if ($this->app->environment('production') || request()->header('x-forwarded-proto') === 'https') {
+            URL::forceScheme('https');
+        }
 
         JadwalMomentum::observe(JadwalMomentumObserver::class);
         KalenderAkademik::observe(KalenderAkademikObserver::class);

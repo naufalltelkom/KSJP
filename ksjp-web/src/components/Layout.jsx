@@ -132,7 +132,12 @@ export default function Layout({
 
           {isStaff && (
             <a
-              href="http://127.0.0.1:8000/admin"
+              href={
+                import.meta.env.VITE_ADMIN_URL ||
+                (import.meta.env.DEV
+                  ? 'http://127.0.0.1:8000/admin'
+                  : 'https://ksjp-stematel-api.vercel.app/admin')
+              }
               target="_blank"
               rel="noreferrer"
               className="mt-4 w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-semibold bg-amber-50 text-amber-900 border border-amber-200 hover:bg-amber-100 transition"

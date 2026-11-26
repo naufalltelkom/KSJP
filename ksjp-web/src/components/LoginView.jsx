@@ -86,7 +86,12 @@ export default function LoginView() {
               Download APK HP
             </a>
             <a
-              href="http://127.0.0.1:8000/admin"
+              href={
+                import.meta.env.VITE_ADMIN_URL ||
+                (import.meta.env.DEV
+                  ? 'http://127.0.0.1:8000/admin'
+                  : 'https://ksjp-stematel-api.vercel.app/admin')
+              }
               target="_blank"
               rel="noreferrer"
               className="hidden sm:inline-flex px-3.5 py-1.5 rounded-full bg-surface-container text-on-surface hover:bg-surface-high transition"
