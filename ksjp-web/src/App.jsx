@@ -189,6 +189,13 @@ function PortalShell() {
     await loadNotifikasi(false);
   };
 
+  const handleSelectTab = useCallback((nextTab) => {
+    setActiveTab(nextTab);
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, []);
+
   if (initializing) {
     return (
       <div className="min-h-screen bg-surface flex items-center justify-center">
@@ -211,13 +218,6 @@ function PortalShell() {
     jadwalData?.harian?.pergantian_jam?.pengingat_aktif ||
       notifikasiState?.pengingat_pergantian_jam?.pengingat_aktif
   );
-
-  const handleSelectTab = useCallback((nextTab) => {
-    setActiveTab(nextTab);
-    if (typeof window !== 'undefined') {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-  }, []);
 
   return (
     <Layout
