@@ -24,7 +24,7 @@ export default function Layout({
   children,
 }) {
   const { user, logout } = useAuth();
-  const { triggerInstall, installed } = usePwaInstall();
+  const { triggerInstall, installed, isMobileDevice } = usePwaInstall();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [localSearch, setLocalSearch] = useState(searchQuery);
   const [collapsed, setCollapsed] = useState(() => {
@@ -192,7 +192,7 @@ export default function Layout({
                   <div className="text-[13px] font-extrabold tracking-tight text-white truncate">
                     KSJP Stematel
                   </div>
-                  <div className="text-[10px] font-medium text-blue-100/80 truncate">
+                  <div className="text-[10px] font-medium text-rose-100/80 truncate">
                     Portal Siswa & Jadwal
                   </div>
                 </div>
@@ -288,7 +288,7 @@ export default function Layout({
                     </span>
 
                     {item.id === 'notifikasi' && unreadCount > 0 && (
-                      <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-amber-400 ring-2 ring-[#1f345d]" />
+                      <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-amber-400 ring-2 ring-[#7a0e19]" />
                     )}
 
                     <span className="glassy-tooltip">
@@ -349,7 +349,7 @@ export default function Layout({
             >
               {!collapsed && (
                 <div className="flex items-center justify-between px-1 mb-2 glassy-stagger-item">
-                  <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-blue-100/65">
+                  <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-rose-100/75">
                     Ringkasan
                   </span>
                   {isStaff && (
@@ -392,7 +392,7 @@ export default function Layout({
                         <span className={`w-2 h-2 rounded-full shrink-0 ${dot.dotClass}`} />
                         <span className="truncate font-medium">{dot.label}</span>
                       </span>
-                      <span className="px-2 py-0.5 rounded-full bg-white/10 text-[10px] font-bold text-blue-100/90 shrink-0">
+                      <span className="px-2 py-0.5 rounded-full bg-white/12 text-[10px] font-bold text-rose-100/95 shrink-0">
                         {dot.badge}
                       </span>
                     </button>
@@ -417,22 +417,24 @@ export default function Layout({
             </div>
           </nav>
 
-          {/* Footer: PWA Card + User Avatar Row */}
+          {/* Footer: PWA Card (mobile only) + User Avatar Row */}
           {collapsed ? (
             <div className="flex flex-col items-center gap-2 pt-2 border-t border-white/15 w-full">
-              <button
-                type="button"
-                onClick={triggerInstall}
-                aria-label="Install Aplikasi Android & iOS"
-                className="glassy-tip-trigger relative w-[38px] h-[38px] rounded-full border-2 border-amber-400/80 bg-white/10 text-amber-300 flex items-center justify-center cursor-pointer hover:scale-105 transition"
-              >
-                <span className="material-symbols-outlined text-[17px]">
-                  {installed ? 'verified' : 'install_mobile'}
-                </span>
-                <span className="glassy-tooltip">
-                  {installed ? 'PWA Terpasang' : 'Install App (Android & iOS)'}
-                </span>
-              </button>
+              {isMobileDevice && (
+                <button
+                  type="button"
+                  onClick={triggerInstall}
+                  aria-label="Install Aplikasi Android & iOS"
+                  className="glassy-tip-trigger relative w-[38px] h-[38px] rounded-full border-2 border-amber-400/80 bg-white/10 text-amber-300 flex items-center justify-center cursor-pointer hover:scale-105 transition"
+                >
+                  <span className="material-symbols-outlined text-[17px]">
+                    {installed ? 'verified' : 'install_mobile'}
+                  </span>
+                  <span className="glassy-tooltip">
+                    {installed ? 'PWA Terpasang' : 'Install App (Android & iOS)'}
+                  </span>
+                </button>
+              )}
 
               <button
                 type="button"
@@ -441,7 +443,7 @@ export default function Layout({
                 className="glassy-tip-trigger relative w-[38px] h-[38px] rounded-full bg-gradient-to-br from-[#f8b384] to-[#e67e5f] text-slate-900 text-xs font-extrabold flex items-center justify-center cursor-pointer shadow-md"
               >
                 {initials}
-                <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400 ring-2 ring-[#101c34]" />
+                <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400 ring-2 ring-[#3a0911]" />
                 <span className="glassy-tooltip">
                   {user?.nama_lengkap} • {user?.kelas?.nama_kelas || getRoleLabel(user?.role)}
                 </span>
@@ -449,30 +451,32 @@ export default function Layout({
             </div>
           ) : (
             <div className="px-3 pt-2 border-t border-white/15 space-y-2.5 glassy-stagger-item">
-              <div className="rounded-2xl bg-white/10 border border-white/15 p-2.5 flex items-center justify-between gap-2">
-                <div className="flex items-center gap-2.5 min-w-0">
-                  <div className="w-8 h-8 rounded-full border-2 border-amber-400/90 bg-slate-900/40 text-amber-300 flex items-center justify-center shrink-0">
-                    <span className="material-symbols-outlined text-[16px]">
-                      {installed ? 'verified' : 'install_mobile'}
-                    </span>
-                  </div>
-                  <div className="min-w-0">
-                    <div className="text-[11px] font-bold text-white leading-tight truncate">
-                      {installed ? 'App Terpasang' : 'PWA Mobile'}
+              {isMobileDevice && (
+                <div className="rounded-2xl bg-white/10 border border-white/15 p-2.5 flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="w-8 h-8 rounded-full border-2 border-amber-400/90 bg-slate-900/40 text-amber-300 flex items-center justify-center shrink-0">
+                      <span className="material-symbols-outlined text-[16px]">
+                        {installed ? 'verified' : 'install_mobile'}
+                      </span>
                     </div>
-                    <div className="text-[10px] text-blue-100/75 leading-tight truncate">
-                      {installed ? 'Android & iOS OK' : 'Notif Real-Time'}
+                    <div className="min-w-0">
+                      <div className="text-[11px] font-bold text-white leading-tight truncate">
+                        {installed ? 'App Terpasang' : 'PWA Mobile'}
+                      </div>
+                      <div className="text-[10px] text-rose-100/75 leading-tight truncate">
+                        {installed ? 'Android & iOS OK' : 'Notif Real-Time'}
+                      </div>
                     </div>
                   </div>
+                  <button
+                    type="button"
+                    onClick={triggerInstall}
+                    className="px-2.5 py-1 rounded-full bg-[#e3bc6e] hover:bg-[#f0ca7d] text-slate-950 text-[10px] font-extrabold transition shrink-0 cursor-pointer"
+                  >
+                    {installed ? 'Aktif' : 'Install'}
+                  </button>
                 </div>
-                <button
-                  type="button"
-                  onClick={triggerInstall}
-                  className="px-2.5 py-1 rounded-full bg-[#e3bc6e] hover:bg-[#f0ca7d] text-slate-950 text-[10px] font-extrabold transition shrink-0 cursor-pointer"
-                >
-                  {installed ? 'Aktif' : 'Install'}
-                </button>
-              </div>
+              )}
 
               <div className="flex items-center justify-between gap-2 px-1 pb-0.5">
                 <button
@@ -482,13 +486,13 @@ export default function Layout({
                 >
                   <div className="relative w-8 h-8 rounded-full bg-gradient-to-br from-[#f8b384] to-[#e67e5f] text-slate-900 text-xs font-extrabold flex items-center justify-center shrink-0 shadow-sm">
                     {initials}
-                    <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400 ring-2 ring-[#111e38]" />
+                    <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400 ring-2 ring-[#3a0911]" />
                   </div>
                   <div className="min-w-0">
-                    <div className="text-xs font-bold text-white truncate max-w-[125px] group-hover:text-blue-200 transition">
+                    <div className="text-xs font-bold text-white truncate max-w-[125px] group-hover:text-rose-200 transition">
                       {user?.nama_lengkap}
                     </div>
-                    <div className="text-[10px] text-blue-100/70 truncate">
+                    <div className="text-[10px] text-rose-100/75 truncate">
                       {user?.kelas?.nama_kelas || getRoleLabel(user?.role)}
                     </div>
                   </div>
@@ -499,7 +503,7 @@ export default function Layout({
                   onClick={logout}
                   title="Keluar Akun"
                   aria-label="Keluar Akun"
-                  className="w-7 h-7 rounded-full hover:bg-white/15 text-blue-100/80 hover:text-rose-300 flex items-center justify-center transition shrink-0 cursor-pointer"
+                  className="w-7 h-7 rounded-full hover:bg-white/15 text-rose-100/80 hover:text-white flex items-center justify-center transition shrink-0 cursor-pointer"
                 >
                   <span className="material-symbols-outlined text-[16px]">logout</span>
                 </button>
@@ -517,12 +521,12 @@ export default function Layout({
           }`}
         >
           <div className="flex flex-col items-center gap-3">
-            {/* Vibrant Blue Top Action Square */}
+            {/* Vibrant Crimson Top Action Square */}
             <button
               type="button"
               onClick={() => onSelectTab('jadwal')}
               title="Buka Jadwal Hari Ini"
-              className="w-9 h-9 rounded-xl bg-[#1d63ed] hover:bg-[#1554d1] text-white shadow-md shadow-blue-600/30 flex items-center justify-center transition cursor-pointer"
+              className="w-9 h-9 rounded-xl bg-[#d91e2a] hover:bg-[#b10019] text-white shadow-md shadow-rose-600/30 flex items-center justify-center transition cursor-pointer"
             >
               <span className="material-symbols-outlined text-[18px]">event_note</span>
             </button>
@@ -566,7 +570,7 @@ export default function Layout({
                 </div>
                 <div>
                   <div className="text-sm font-extrabold">KSJP STEMATEL</div>
-                  <div className="text-[10px] text-blue-100/75">Portal Siswa & Jadwal</div>
+                  <div className="text-[10px] text-rose-100/80">Portal Siswa & Jadwal</div>
                 </div>
               </div>
               <button
@@ -627,17 +631,19 @@ export default function Layout({
               )}
             </div>
             <div className="space-y-2 pt-3 border-t border-white/15">
-              <button
-                type="button"
-                onClick={() => {
-                  setMobileMenuOpen(false);
-                  triggerInstall();
-                }}
-                className="w-full rounded-full bg-[#e3bc6e] text-slate-950 py-2.5 px-3 text-sm font-bold flex items-center justify-center gap-2 cursor-pointer"
-              >
-                <span className="material-symbols-outlined text-[18px]">install_mobile</span>
-                {installed ? 'Aplikasi Terpasang' : 'Install App (Android & iOS)'}
-              </button>
+              {isMobileDevice && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    triggerInstall();
+                  }}
+                  className="w-full rounded-full bg-[#e3bc6e] text-slate-950 py-2.5 px-3 text-sm font-bold flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <span className="material-symbols-outlined text-[18px]">install_mobile</span>
+                  {installed ? 'Aplikasi Terpasang' : 'Install App (Android & iOS)'}
+                </button>
+              )}
               <button
                 type="button"
                 onClick={logout}
@@ -683,7 +689,7 @@ export default function Layout({
           </div>
 
           <div className="flex items-center gap-2 sm:gap-3">
-            {!installed && (
+            {isMobileDevice && !installed && (
               <button
                 type="button"
                 onClick={triggerInstall}

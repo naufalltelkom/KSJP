@@ -212,48 +212,57 @@ function PortalShell() {
       notifikasiState?.pengingat_pergantian_jam?.pengingat_aktif
   );
 
+  const handleSelectTab = useCallback((nextTab) => {
+    setActiveTab(nextTab);
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, []);
+
   return (
     <Layout
       activeTab={activeTab}
-      onSelectTab={setActiveTab}
+      onSelectTab={handleSelectTab}
       unreadCount={notifikasiState.unreadCount}
       momentumCount={momentumCount}
       pergantianAktif={pergantianAktif}
       searchQuery={kalenderSearch}
       onSearchSubmit={(q) => {
         setKalenderSearch(q);
-        setActiveTab('kalender');
+        handleSelectTab('kalender');
       }}
       toast={toast}
       onDismissToast={() => setToast(null)}
     >
-      {activeTab === 'dashboard' && (
-        <DashboardPage
-          jadwalData={jadwalData}
-          kalenderItems={kalenderItems}
-          notifikasiState={notifikasiState}
-          onNavigate={setActiveTab}
-          onRefreshAll={loadAllData}
-          loading={loadingInitial}
-        />
-      )}
+      <div key={activeTab} className="ksjp-page-transition">
+        {activeTab === 'dashboard' && (
+          <DashboardPage
+            jadwalData={jadwalData}
+            kalenderItems={kalenderItems}
+            notifikasiState={notifikasiState}
+            onNavigate={handleSelectTab}
+            onRefreshAll={loadAllData}
+            loading={loadingInitial}
+          />
+        )}
 
-      {activeTab === 'jadwal' && <JadwalPage initialHarianData={jadwalData?.harian} />}
+        {activeTab === 'jadwal' && <JadwalPage initialHarianData={jadwalData?.harian} />}
 
-      {activeTab === 'kalender' && (
-        <KalenderPage kalenderItems={kalenderItems} externalSearch={kalenderSearch} />
-      )}
+        {activeTab === 'kalender' && (
+          <KalenderPage kalenderItems={kalenderItems} externalSearch={kalenderSearch} />
+        )}
 
-      {activeTab === 'notifikasi' && (
-        <NotifikasiPage
-          notifikasiState={notifikasiState}
-          onMarkRead={handleMarkRead}
-          onMarkAllRead={handleMarkAllRead}
-          onRefresh={() => loadNotifikasi(false)}
-        />
-      )}
+        {activeTab === 'notifikasi' && (
+          <NotifikasiPage
+            notifikasiState={notifikasiState}
+            onMarkRead={handleMarkRead}
+            onMarkAllRead={handleMarkAllRead}
+            onRefresh={() => loadNotifikasi(false)}
+          />
+        )}
 
-      {activeTab === 'profil' && <ProfilPage />}
+        {activeTab === 'profil' && <ProfilPage />}
+      </div>
     </Layout>
   );
 }

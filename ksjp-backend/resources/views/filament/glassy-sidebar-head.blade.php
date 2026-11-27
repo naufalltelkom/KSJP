@@ -6,7 +6,7 @@
         color: #ffffff !important;
     }
     .fi-sidebar .ksjp-brand-subtitle {
-        color: rgba(219, 234, 254, 0.82) !important;
+        color: rgba(255, 228, 230, 0.85) !important;
     }
 
     @media (min-width: 1024px) {
@@ -33,21 +33,21 @@
         }
     }
 
-    /* Main Floating Glass Container */
+    /* Main Floating Glass Container — SMK Telkom Crimson Theme */
     .fi-sidebar.fi-main-sidebar {
         background: linear-gradient(
             180deg,
-            rgba(116, 160, 224, 0.90) 0%,
-            rgba(47, 83, 140, 0.94) 32%,
-            rgba(18, 30, 56, 0.97) 100%
+            rgba(217, 30, 42, 0.90) 0%,
+            rgba(162, 16, 30, 0.94) 34%,
+            rgba(58, 9, 17, 0.97) 100%
         ) !important;
         backdrop-filter: blur(22px) saturate(165%) !important;
         -webkit-backdrop-filter: blur(22px) saturate(165%) !important;
-        border: 1px solid rgba(255, 255, 255, 0.30) !important;
+        border: 1px solid rgba(255, 255, 255, 0.28) !important;
         box-shadow:
-            0 24px 60px -14px rgba(10, 20, 42, 0.38),
-            0 8px 20px -6px rgba(15, 30, 62, 0.25),
-            inset 0 1px 0 rgba(255, 255, 255, 0.48) !important;
+            0 24px 60px -14px rgba(88, 12, 22, 0.40),
+            0 8px 20px -6px rgba(65, 0, 4, 0.28),
+            inset 0 1px 0 rgba(255, 255, 255, 0.46) !important;
         color: #ffffff !important;
     }
 
@@ -137,7 +137,7 @@
     .ksjp-fi-circle-btn:hover {
         background: rgba(255, 255, 255, 0.26);
         border-color: rgba(255, 255, 255, 0.50);
-        box-shadow: 0 0 18px rgba(147, 197, 253, 0.45);
+        box-shadow: 0 0 18px rgba(253, 164, 175, 0.48);
     }
 
     .ksjp-fi-expand-emblem,
@@ -157,7 +157,7 @@
         white-space: nowrap;
         padding: 5px 10px;
         border-radius: 10px;
-        background: rgba(15, 23, 42, 0.94);
+        background: rgba(28, 12, 15, 0.94);
         border: 1px solid rgba(255, 255, 255, 0.16);
         color: #f8fafc;
         font-size: 11px;
@@ -269,7 +269,7 @@
     }
 
     .fi-sidebar .fi-sidebar-group-label {
-        color: rgba(219, 234, 254, 0.72) !important;
+        color: rgba(255, 228, 230, 0.78) !important;
         font-size: 10px !important;
         font-weight: 700 !important;
         text-transform: uppercase !important;
@@ -278,7 +278,7 @@
 
     .fi-sidebar .fi-sidebar-group-collapse-btn,
     .fi-sidebar .fi-sidebar-group-btn svg {
-        color: rgba(219, 234, 254, 0.72) !important;
+        color: rgba(255, 228, 230, 0.78) !important;
     }
 
     .fi-sidebar .fi-sidebar-group-items {
@@ -294,13 +294,14 @@
         background: rgba(255, 255, 255, 0.08) !important;
         border: 1px solid rgba(255, 255, 255, 0.14) !important;
         box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14) !important;
-        transition: all 180ms ease !important;
+        transition: all 220ms cubic-bezier(0.22, 1, 0.36, 1) !important;
     }
 
     .fi-sidebar .fi-sidebar-item-btn:hover {
         background: rgba(255, 255, 255, 0.20) !important;
-        border-color: rgba(255, 255, 255, 0.34) !important;
-        box-shadow: 0 6px 16px rgba(10, 20, 42, 0.22) !important;
+        border-color: rgba(255, 255, 255, 0.36) !important;
+        transform: translateX(2px);
+        box-shadow: 0 6px 16px rgba(65, 0, 4, 0.25) !important;
     }
 
     .fi-sidebar .fi-sidebar-item-label {
@@ -403,7 +404,7 @@
         font-size: 9.5px;
         font-weight: 700;
         letter-spacing: 0.14em;
-        color: rgba(219, 234, 254, 0.65);
+        color: rgba(255, 228, 230, 0.72);
         margin-bottom: 5px;
         padding-inline: 4px;
     }
@@ -458,8 +459,8 @@
     .ksjp-fi-dot-badge {
         padding: 1px 7px;
         border-radius: 9999px;
-        background: rgba(255, 255, 255, 0.10);
-        color: rgba(219, 234, 254, 0.90);
+        background: rgba(255, 255, 255, 0.12);
+        color: rgba(255, 228, 230, 0.92);
         font-size: 10px;
         font-weight: 700;
     }
@@ -511,7 +512,7 @@
 
     .ksjp-fi-portal-sub {
         font-size: 9.5px;
-        color: rgba(219, 234, 254, 0.72);
+        color: rgba(255, 228, 230, 0.78);
         line-height: 1.2;
     }
 
@@ -566,7 +567,7 @@
         height: 10px;
         border-radius: 9999px;
         background: #34d399;
-        border: 2px solid #121f3b;
+        border: 2px solid #3a0911;
     }
 
     .ksjp-fi-user-meta {
@@ -585,7 +586,7 @@
 
     .ksjp-fi-user-role {
         font-size: 10px;
-        color: rgba(219, 234, 254, 0.72);
+        color: rgba(255, 228, 230, 0.78);
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -597,7 +598,7 @@
         border-radius: 9999px;
         background: transparent;
         border: 0;
-        color: rgba(219, 234, 254, 0.78);
+        color: rgba(255, 228, 230, 0.82);
         display: inline-flex;
         align-items: center;
         justify-content: center;
@@ -638,17 +639,18 @@
         width: 34px;
         height: 34px;
         border-radius: 12px;
-        background: #1d63ed;
+        background: #d91e2a;
         color: #ffffff;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        box-shadow: 0 6px 14px rgba(29, 99, 237, 0.32);
-        transition: background 150ms ease;
+        box-shadow: 0 6px 14px rgba(177, 0, 25, 0.30);
+        transition: background 150ms ease, transform 150ms ease;
     }
 
     .ksjp-fi-rail-blue-btn:hover {
-        background: #1554d1;
+        background: #b10019;
+        transform: scale(1.04);
     }
 
     .ksjp-fi-rail-icon-btn {
@@ -681,6 +683,22 @@
         user-select: none;
         padding-bottom: 4px;
     }
+
+    /* Smooth Page Transition for Filament SPA Mode */
+    .fi-page {
+        animation: ksjpFiPageEnter 260ms cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+
+    @keyframes ksjpFiPageEnter {
+        from {
+            opacity: 0;
+            transform: translateY(7px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
 </style>
 
 <script>
@@ -692,17 +710,34 @@
         });
     };
 
+    window.ksjpSyncAdminUi = function () {
+        const open = window.Alpine?.store('sidebar')?.isOpen;
+        if (typeof open === 'boolean') {
+            document.body.classList.toggle('ksjp-fi-open', open);
+            document.body.classList.toggle('ksjp-fi-collapsed', !open);
+        }
+        const rail = document.getElementById('ksjp-fi-rail-vertical');
+        if (rail) {
+            const p = window.location.pathname;
+            let label = 'DASHBOARD';
+            if (p.includes('kalender')) label = 'KALENDER';
+            else if (p.includes('jadwal-momenta')) label = 'MOMENTUM';
+            else if (p.includes('jadwal-pelajaran')) label = 'JADWAL';
+            else if (p.includes('notifikasi')) label = 'NOTIFIKASI';
+            else if (p.includes('users')) label = 'PENGGUNA';
+            else if (p.includes('kelas')) label = 'KELAS';
+            rail.textContent = label;
+        }
+    };
+
     document.addEventListener('alpine:init', () => {
-        const syncBodyClass = () => {
-            const open = window.Alpine?.store('sidebar')?.isOpen;
-            if (typeof open === 'boolean') {
-                document.body.classList.toggle('ksjp-fi-open', open);
-                document.body.classList.toggle('ksjp-fi-collapsed', !open);
-            }
-        };
-        setTimeout(syncBodyClass, 0);
-        window.addEventListener('resize', syncBodyClass);
-        document.addEventListener('click', () => setTimeout(syncBodyClass, 10));
+        setTimeout(window.ksjpSyncAdminUi, 0);
+        window.addEventListener('resize', window.ksjpSyncAdminUi);
+        document.addEventListener('click', () => setTimeout(window.ksjpSyncAdminUi, 10));
+    });
+
+    document.addEventListener('livewire:navigated', () => {
+        setTimeout(window.ksjpSyncAdminUi, 0);
     });
 
     window.addEventListener('keydown', (e) => {

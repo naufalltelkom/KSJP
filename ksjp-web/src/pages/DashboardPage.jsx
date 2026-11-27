@@ -26,7 +26,7 @@ export default function DashboardPage({
   loading,
 }) {
   const { user } = useAuth();
-  const { triggerInstall, installed } = usePwaInstall();
+  const { triggerInstall, installed, isMobileDevice } = usePwaInstall();
   const [notifPerm, setNotifPerm] = useState(() => getNotificationStatus());
   const [now, setNow] = useState(() => new Date());
 
@@ -103,16 +103,18 @@ export default function DashboardPage({
               <span className="material-symbols-outlined text-[18px]">schedule</span>
               Jadwal Hari Ini
             </button>
-            <button
-              type="button"
-              onClick={triggerInstall}
-              className="rounded-xl bg-white/15 hover:bg-white/25 text-white border border-white/25 font-semibold px-4 py-2.5 text-sm transition inline-flex items-center gap-2 cursor-pointer"
-            >
-              <span className="material-symbols-outlined text-[18px]">
-                {installed ? 'check_circle' : 'install_mobile'}
-              </span>
-              {installed ? 'Aplikasi Terpasang' : 'Install App (Android & iOS)'}
-            </button>
+            {isMobileDevice && (
+              <button
+                type="button"
+                onClick={triggerInstall}
+                className="rounded-xl bg-white/15 hover:bg-white/25 text-white border border-white/25 font-semibold px-4 py-2.5 text-sm transition inline-flex items-center gap-2 cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-[18px]">
+                  {installed ? 'check_circle' : 'install_mobile'}
+                </span>
+                {installed ? 'Aplikasi Terpasang' : 'Install App (Android & iOS)'}
+              </button>
+            )}
             {notifPerm === 'default' && (
               <button
                 type="button"

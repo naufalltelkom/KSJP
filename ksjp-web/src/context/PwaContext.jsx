@@ -4,18 +4,20 @@ const PwaContext = createContext(null);
 
 function detectPlatform() {
   if (typeof window === 'undefined') {
-    return { isIos: false, isAndroid: false, isStandalone: false };
+    return { isIos: false, isAndroid: false, isMobileDevice: false, isStandalone: false };
   }
   const ua = window.navigator.userAgent || '';
   const isIos =
     /iPad|iPhone|iPod/.test(ua) ||
     (window.navigator.platform === 'MacIntel' && window.navigator.maxTouchPoints > 1);
   const isAndroid = /Android/i.test(ua);
+  const isMobileDevice =
+    isIos || isAndroid || /Mobile|Tablet|Silk|Kindle|Opera Mini|IEMobile/i.test(ua);
   const isStandalone =
     window.matchMedia?.('(display-mode: standalone)')?.matches ||
     window.navigator.standalone === true;
 
-  return { isIos, isAndroid, isStandalone };
+  return { isIos, isAndroid, isMobileDevice, isStandalone };
 }
 
 export function PwaProvider({ children }) {
@@ -73,6 +75,7 @@ export function PwaProvider({ children }) {
     installed,
     isIos: platform.isIos,
     isAndroid: platform.isAndroid,
+    isMobileDevice: platform.isMobileDevice,
     triggerInstall,
     openGuide: () => setGuideOpen(true),
   };

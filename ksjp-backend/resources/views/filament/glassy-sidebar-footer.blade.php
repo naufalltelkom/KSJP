@@ -155,6 +155,6 @@
             </button>
         </div>
 
-        <div class="ksjp-fi-rail-vertical">{{ $railLabel }}</div>
+        <div class="ksjp-fi-rail-vertical" id="ksjp-fi-rail-vertical">{{ $railLabel }}</div>
     </div>
 @endif
