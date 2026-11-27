@@ -12,6 +12,7 @@ use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
+use Filament\View\PanelsRenderHook;
 use Filament\Widgets\AccountWidget;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
@@ -31,6 +32,11 @@ class AdminPanelProvider extends PanelProvider
             ->brandName('SMK Telkom Purwokerto')
             ->brandLogo(fn () => view('filament.brand-logo'))
             ->brandLogoHeight('2.5rem')
+            ->sidebarCollapsibleOnDesktop()
+            ->renderHook(PanelsRenderHook::HEAD_END, fn () => view('filament.glassy-sidebar-head'))
+            ->renderHook(PanelsRenderHook::SIDEBAR_LOGO_AFTER, fn () => view('filament.glassy-sidebar-toggle'))
+            ->renderHook(PanelsRenderHook::SIDEBAR_NAV_START, fn () => view('filament.glassy-sidebar-search'))
+            ->renderHook(PanelsRenderHook::SIDEBAR_FOOTER, fn () => view('filament.glassy-sidebar-footer'))
             ->login()
             ->colors([
                 'primary' => Color::Rose,

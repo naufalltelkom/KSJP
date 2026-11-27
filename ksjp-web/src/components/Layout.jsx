@@ -1,14 +1,14 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { usePwaInstall } from '../context/PwaContext';
 import { getRoleLabel } from '../utils/date';
 
 const NAV_ITEMS = [
-  { id: 'dashboard', label: 'Dashboard', icon: 'dashboard' },
-  { id: 'jadwal', label: 'Jadwal Pelajaran', icon: 'schedule' },
-  { id: 'kalender', label: 'Kalender Akademik', icon: 'calendar_month' },
-  { id: 'notifikasi', label: 'Notifikasi', icon: 'notifications' },
-  { id: 'profil', label: 'Profil & Sesi', icon: 'person' },
+  { id: 'dashboard', label: 'Dashboard', railLabel: 'DASHBOARD', icon: 'home' },
+  { id: 'jadwal', label: 'Jadwal Pelajaran', railLabel: 'JADWAL', icon: 'schedule' },
+  { id: 'kalender', label: 'Kalender Akademik', railLabel: 'KALENDER', icon: 'calendar_month' },
+  { id: 'notifikasi', label: 'Notifikasi', railLabel: 'NOTIFIKASI', icon: 'notifications' },
+  { id: 'profil', label: 'Profil & Sesi', railLabel: 'PROFIL', icon: 'person' },
 ];
 
 export default function Layout({
@@ -27,6 +27,53 @@ export default function Layout({
   const { triggerInstall, installed } = usePwaInstall();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [localSearch, setLocalSearch] = useState(searchQuery);
+  const [collapsed, setCollapsed] = useState(() => {
+    try {
+      return localStorage.getItem('ksjp_sidebar_collapsed') === '1';
+    } catch {
+      return false;
+    }
+  });
+  const [brandHovered, setBrandHovered] = useState(false);
+  const sidebarSearchRef = useRef(null);
+
+  useEffect(() => {
+    setLocalSearch(searchQuery);
+  }, [searchQuery]);
+
+  const toggleCollapsed = () => {
+    setCollapsed((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem('ksjp_sidebar_collapsed', next ? '1' : '0');
+      } catch {
+        // Abaikan error localStorage
+      }
+      return next;
+    });
+  };
+
+  useEffect(() => {
+    const onKeyDown = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'b') {
+        e.preventDefault();
+        toggleCollapsed();
+      } else if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setCollapsed(false);
+        try {
+          localStorage.setItem('ksjp_sidebar_collapsed', '0');
+        } catch {
+          // Abaikan
+        }
+        setTimeout(() => {
+          sidebarSearchRef.current?.focus();
+        }, 120);
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, []);
 
   const initials = (user?.nama_lengkap || 'KS')
     .split(' ')
@@ -36,6 +83,13 @@ export default function Layout({
     .toUpperCase();
 
   const isStaff = user?.role === 'guru' || user?.role === 'admin_organisasi';
+  const adminUrl =
+    import.meta.env.VITE_ADMIN_URL ||
+    (import.meta.env.DEV
+      ? 'http://127.0.0.1:8000/admin'
+      : 'https://ksjp-stematel-api.vercel.app/admin');
+
+  const activeNavMeta = NAV_ITEMS.find((n) => n.id === activeTab) || NAV_ITEMS[0];
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -44,177 +98,486 @@ export default function Layout({
     }
   };
 
+  const quickStatusDots = [
+    {
+      id: 'kalender',
+      label: 'T.A. 2026/2027',
+      badge: 'Live',
+      dotClass: 'bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.85)]',
+    },
+    {
+      id: 'jadwal',
+      label: 'Jadwal Hari Ini',
+      badge: momentumCount > 0 ? `${momentumCount} Mom` : 'Aktif',
+      dotClass: 'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.85)]',
+    },
+    {
+      id: 'notifikasi',
+      label: 'Bel Real-Time',
+      badge: pergantianAktif ? 'Dekat' : 'Siaga',
+      dotClass: 'bg-rose-400 shadow-[0_0_8px_rgba(251,113,133,0.85)]',
+    },
+  ];
+
+  // Contextual icons on the attached right white utility rail (adapts per active tab)
+  const railActions = (() => {
+    if (activeTab === 'jadwal') {
+      return [
+        { icon: 'calendar_month', label: 'Kalender Akademik', onClick: () => onSelectTab('kalender') },
+        { icon: 'notifications', label: 'Notifikasi', onClick: () => onSelectTab('notifikasi') },
+        { icon: 'person', label: 'Profil & Akun', onClick: () => onSelectTab('profil') },
+      ];
+    }
+    if (activeTab === 'kalender') {
+      return [
+        {
+          icon: 'search',
+          label: 'Cari Agenda (⌘K)',
+          onClick: () => sidebarSearchRef.current?.focus(),
+        },
+        { icon: 'schedule', label: 'Jadwal Pelajaran', onClick: () => onSelectTab('jadwal') },
+        { icon: 'home', label: 'Dashboard', onClick: () => onSelectTab('dashboard') },
+      ];
+    }
+    return [
+      { icon: 'schedule', label: 'Jadwal Pelajaran', onClick: () => onSelectTab('jadwal') },
+      { icon: 'calendar_month', label: 'Kalender Akademik', onClick: () => onSelectTab('kalender') },
+      { icon: 'tune', label: 'Ciutkan (⌘B)', onClick: toggleCollapsed },
+    ];
+  })();
+
   return (
     <div className="min-h-screen bg-surface text-on-surface flex">
-      {/* Desktop Fixed Sidebar (w-72) */}
-      <aside className="hidden lg:flex fixed inset-y-0 left-0 w-72 bg-white shadow-sm border-r border-surface-high/60 flex-col z-30">
-        {/* Brand Header */}
-        <div className="h-20 px-6 flex items-center gap-3 border-b border-surface-high/50">
-          <div className="w-10 h-10 rounded-xl bg-primary-container text-white flex items-center justify-center shadow-sm">
-            <span className="material-symbols-outlined text-[22px]">school</span>
-          </div>
-          <div>
-            <div className="text-sm font-extrabold tracking-tight text-on-surface">
-              KSJP STEMATEL
-            </div>
-            <div className="text-[11px] font-semibold text-on-surface-variant uppercase tracking-wider">
-              Portal Siswa & Jadwal
-            </div>
-          </div>
-        </div>
-
-        {/* Active Year Chip */}
-        <div className="px-5 pt-5 pb-2">
-          <div className="rounded-2xl bg-surface-low px-4 py-3 border border-surface-high/50">
-            <div className="text-[10px] font-bold uppercase tracking-wider text-secondary">
-              Tahun Pelajaran Aktif
-            </div>
-            <div className="flex items-center justify-between mt-1">
-              <span className="text-sm font-bold text-on-surface">2026 / 2027</span>
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[11px] font-semibold">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                Live
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Navigation Links */}
-        <nav className="flex-1 px-4 py-3 space-y-1.5 overflow-y-auto">
-          {NAV_ITEMS.map((item) => {
-            const isActive = activeTab === item.id;
-            return (
+      {/* Desktop Floating Glassy Sidebar V10 */}
+      <aside
+        className={`hidden lg:flex fixed top-3.5 left-3.5 bottom-3.5 z-30 glassy-sidebar-shell select-none ${
+          collapsed ? 'w-[68px] rounded-full overflow-visible' : 'w-[306px] rounded-[30px] overflow-hidden'
+        }`}
+      >
+        {/* Left Translucent Glass Pane */}
+        <div
+          className={`flex-1 min-w-0 flex flex-col h-full ${
+            collapsed ? 'items-center py-3 px-2 overflow-visible' : 'py-3.5 pl-0 pr-0'
+          }`}
+        >
+          {/* Brand Header */}
+          {collapsed ? (
+            <div className="relative flex justify-center w-full mb-2.5">
               <button
-                key={item.id}
                 type="button"
-                onClick={() => onSelectTab(item.id)}
-                className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-semibold transition cursor-pointer ${
-                  isActive
-                    ? 'bg-primary-container text-white shadow-md shadow-primary-container/20'
-                    : 'text-on-surface-variant hover:bg-surface-low hover:text-on-surface'
-                }`}
+                onClick={toggleCollapsed}
+                onMouseEnter={() => setBrandHovered(true)}
+                onMouseLeave={() => setBrandHovered(false)}
+                aria-label="Perluas Sidebar (⌘B)"
+                className="glassy-tip-trigger relative w-[42px] h-[42px] rounded-full glassy-circle-btn flex items-center justify-center cursor-pointer"
               >
-                <span className="flex items-center gap-3">
-                  <span
-                    className={`material-symbols-outlined text-[20px] ${
-                      isActive ? 'material-symbols-fill' : ''
-                    }`}
-                  >
-                    {item.icon}
-                  </span>
-                  {item.label}
+                <span className="material-symbols-outlined text-[20px] text-white transition-transform duration-200">
+                  {brandHovered ? 'dock_to_right' : 'school'}
                 </span>
-
-                {item.id === 'notifikasi' && unreadCount > 0 && (
-                  <span
-                    className={`px-2 py-0.5 rounded-full text-[11px] font-bold ${
-                      isActive
-                        ? 'bg-white text-primary-container'
-                        : 'bg-primary-container text-white'
-                    }`}
-                  >
-                    {unreadCount}
-                  </span>
-                )}
-
-                {item.id === 'jadwal' && momentumCount > 0 && (
-                  <span
-                    className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                      isActive
-                        ? 'bg-white/20 text-white'
-                        : 'bg-amber-100 text-amber-800'
-                    }`}
-                  >
-                    {momentumCount} Momentum
-                  </span>
-                )}
+                <span className="glassy-tooltip flex items-center gap-2">
+                  <span>Expand</span>
+                  <kbd className="px-1.5 py-0.5 rounded bg-white/15 text-[10px] font-mono text-white/90">
+                    ⌘B
+                  </kbd>
+                </span>
               </button>
-            );
-          })}
-
-          {isStaff && (
-            <a
-              href={
-                import.meta.env.VITE_ADMIN_URL ||
-                (import.meta.env.DEV
-                  ? 'http://127.0.0.1:8000/admin'
-                  : 'https://ksjp-stematel-api.vercel.app/admin')
-              }
-              target="_blank"
-              rel="noreferrer"
-              className="mt-4 w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-semibold bg-amber-50 text-amber-900 border border-amber-200 hover:bg-amber-100 transition"
-            >
-              <span className="flex items-center gap-3">
-                <span className="material-symbols-outlined text-[20px]">admin_panel_settings</span>
-                Filament Admin
-              </span>
-              <span className="material-symbols-outlined text-[18px]">open_in_new</span>
-            </a>
-          )}
-        </nav>
-
-        {/* Bottom Helpdesk & Cross-Platform PWA Install Card */}
-        <div className="p-4 border-t border-surface-high/60 space-y-2.5">
-          <button
-            type="button"
-            onClick={triggerInstall}
-            className="w-full rounded-xl bg-primary-fixed/50 hover:bg-primary-fixed text-primary-container border border-primary/20 px-3.5 py-2.5 text-xs font-bold transition flex items-center justify-between cursor-pointer"
-          >
-            <span className="flex items-center gap-2">
-              <span className="material-symbols-outlined text-[18px]">
-                {installed ? 'check_circle' : 'install_mobile'}
-              </span>
-              {installed ? 'Terpasang di Perangkat' : 'Install App (Android & iOS)'}
-            </span>
-            <span className="material-symbols-outlined text-[16px]">add_to_home_screen</span>
-          </button>
-
-          <div className="rounded-2xl bg-surface-low p-4 space-y-2">
-            <div className="flex items-center gap-2 text-xs font-bold text-on-surface">
-              <span className="material-symbols-outlined text-primary text-[18px]">
-                support_agent
-              </span>
-              Tim IT SMK Telkom Purwokerto
             </div>
-            <p className="text-[11px] text-secondary leading-relaxed">
-              Sesi login tersimpan otomatis. Hubungi wali kelas atau admin jika ada kendala NIS.
-            </p>
+          ) : (
+            <div className="px-3.5 pb-3 flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="w-9 h-9 rounded-full bg-white/20 border border-white/35 text-white flex items-center justify-center shadow-inner shrink-0">
+                  <span className="material-symbols-outlined text-[19px]">school</span>
+                </div>
+                <div className="min-w-0 glassy-stagger-item">
+                  <div className="text-[13px] font-extrabold tracking-tight text-white truncate">
+                    KSJP Stematel
+                  </div>
+                  <div className="text-[10px] font-medium text-blue-100/80 truncate">
+                    Portal Siswa & Jadwal
+                  </div>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={toggleCollapsed}
+                title="Ciutkan Sidebar (⌘B)"
+                aria-label="Ciutkan Sidebar"
+                className="w-7 h-7 rounded-full glassy-circle-btn flex items-center justify-center shrink-0 cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-[16px]">chevron_left</span>
+              </button>
+            </div>
+          )}
+
+          {/* Search Pill */}
+          {collapsed ? (
+            <div className="relative flex justify-center w-full mb-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setCollapsed(false);
+                  try {
+                    localStorage.setItem('ksjp_sidebar_collapsed', '0');
+                  } catch {
+                    // Abaikan
+                  }
+                  setTimeout(() => sidebarSearchRef.current?.focus(), 140);
+                }}
+                aria-label="Cari Agenda"
+                className="glassy-tip-trigger relative w-[40px] h-[40px] rounded-full glassy-circle-btn flex items-center justify-center cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-[18px]">search</span>
+                <span className="glassy-tooltip flex items-center gap-2">
+                  <span>Cari agenda</span>
+                  <kbd className="px-1.5 py-0.5 rounded bg-white/15 text-[10px] font-mono text-white/90">
+                    ⌘K
+                  </kbd>
+                </span>
+              </button>
+            </div>
+          ) : (
+            <form onSubmit={handleSearch} className="px-3.5 pb-1">
+              <div className="relative flex items-center rounded-full bg-white/12 border border-white/20 px-3 py-1.5 shadow-inner focus-within:bg-white/20 focus-within:border-white/40 transition">
+                <span className="material-symbols-outlined text-[16px] text-white/75 mr-2 shrink-0">
+                  search
+                </span>
+                <input
+                  ref={sidebarSearchRef}
+                  type="search"
+                  value={localSearch}
+                  onChange={(e) => setLocalSearch(e.target.value)}
+                  placeholder="Search agenda..."
+                  className="w-full bg-transparent text-xs text-white placeholder:text-white/65 focus:outline-none"
+                />
+                <kbd className="ml-1.5 px-1.5 py-0.5 rounded-md bg-white/15 text-[9px] font-bold text-white/85 shrink-0">
+                  ⌘K
+                </kbd>
+              </div>
+            </form>
+          )}
+
+          {/* Navigation Items (Supports Seamless Cutout Active Tab) */}
+          <nav
+            className={`flex-1 ${
+              collapsed
+                ? 'flex flex-col items-center gap-1.5 py-1 overflow-visible w-full'
+                : 'pl-3 pr-0 py-3 space-y-1.5 overflow-y-auto no-scrollbar'
+            }`}
+          >
+            {NAV_ITEMS.map((item, idx) => {
+              const isActive = activeTab === item.id;
+
+              if (collapsed) {
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => onSelectTab(item.id)}
+                    aria-label={item.label}
+                    className={`glassy-tip-trigger relative w-[40px] h-[40px] rounded-full flex items-center justify-center cursor-pointer ${
+                      isActive ? 'glassy-circle-active' : 'glassy-circle-btn'
+                    }`}
+                  >
+                    <span
+                      className={`material-symbols-outlined text-[19px] ${
+                        isActive ? 'material-symbols-fill text-slate-900' : 'text-white'
+                      }`}
+                    >
+                      {item.icon}
+                    </span>
+
+                    {item.id === 'notifikasi' && unreadCount > 0 && (
+                      <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-amber-400 ring-2 ring-[#1f345d]" />
+                    )}
+
+                    <span className="glassy-tooltip">
+                      {item.label}
+                      {item.id === 'notifikasi' && unreadCount > 0 ? ` (${unreadCount})` : ''}
+                    </span>
+                  </button>
+                );
+              }
+
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => onSelectTab(item.id)}
+                  style={{ animationDelay: `${idx * 30}ms` }}
+                  className={`glassy-stagger-item flex items-center justify-between px-3.5 py-2.5 text-[13px] font-semibold cursor-pointer ${
+                    isActive
+                      ? 'w-full glassy-tab-active pr-4'
+                      : 'w-[calc(100%-12px)] rounded-full glassy-pill'
+                  }`}
+                >
+                  <span className="flex items-center gap-2.5 min-w-0">
+                    <span
+                      className={`material-symbols-outlined text-[18px] shrink-0 ${
+                        isActive ? 'material-symbols-fill text-slate-900' : 'text-white/90'
+                      }`}
+                    >
+                      {item.icon}
+                    </span>
+                    <span className="truncate">{item.label}</span>
+                  </span>
+
+                  {item.id === 'notifikasi' && unreadCount > 0 && (
+                    <span className="w-5 h-5 rounded-full bg-amber-400 text-slate-950 text-[10px] font-extrabold flex items-center justify-center shrink-0 shadow-xs">
+                      {unreadCount}
+                    </span>
+                  )}
+
+                  {item.id === 'jadwal' && momentumCount > 0 && (
+                    <span
+                      className={`px-2 py-0.5 rounded-full text-[9px] font-bold shrink-0 ${
+                        isActive ? 'bg-slate-900/10 text-slate-800' : 'bg-white/15 text-amber-200'
+                      }`}
+                    >
+                      {momentumCount} Mom
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+
+            {/* Divider + Ringkasan Hari Ini (Matches PROJECTS Section with 3 Glowing Dots) */}
+            <div
+              className={`${
+                collapsed ? 'w-6 my-1.5 border-t border-white/15' : 'mr-3 my-3 pt-3 border-t border-white/15'
+              }`}
+            >
+              {!collapsed && (
+                <div className="flex items-center justify-between px-1 mb-2 glassy-stagger-item">
+                  <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-blue-100/65">
+                    Ringkasan
+                  </span>
+                  {isStaff && (
+                    <a
+                      href={adminUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      title="Buka KSJP Admin"
+                      className="w-5 h-5 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition"
+                    >
+                      <span className="material-symbols-outlined text-[13px]">admin_panel_settings</span>
+                    </a>
+                  )}
+                </div>
+              )}
+
+              <div className={collapsed ? 'flex flex-col items-center gap-2.5 pt-1' : 'space-y-1'}>
+                {quickStatusDots.map((dot) =>
+                  collapsed ? (
+                    <button
+                      key={dot.id}
+                      type="button"
+                      onClick={() => onSelectTab(dot.id)}
+                      aria-label={dot.label}
+                      className="glassy-tip-trigger relative w-6 h-5 flex items-center justify-center cursor-pointer"
+                    >
+                      <span className={`w-2 h-2 rounded-full ${dot.dotClass}`} />
+                      <span className="glassy-tooltip">
+                        {dot.label} • {dot.badge}
+                      </span>
+                    </button>
+                  ) : (
+                    <button
+                      key={dot.id}
+                      type="button"
+                      onClick={() => onSelectTab(dot.id)}
+                      className="w-full flex items-center justify-between px-2 py-1.5 rounded-xl text-[12px] text-white/85 hover:bg-white/10 hover:text-white transition cursor-pointer"
+                    >
+                      <span className="flex items-center gap-2.5 min-w-0">
+                        <span className={`w-2 h-2 rounded-full shrink-0 ${dot.dotClass}`} />
+                        <span className="truncate font-medium">{dot.label}</span>
+                      </span>
+                      <span className="px-2 py-0.5 rounded-full bg-white/10 text-[10px] font-bold text-blue-100/90 shrink-0">
+                        {dot.badge}
+                      </span>
+                    </button>
+                  )
+                )}
+              </div>
+
+              {isStaff && !collapsed && (
+                <a
+                  href={adminUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mt-2.5 w-full flex items-center justify-between px-3 py-2 rounded-full bg-amber-400/15 hover:bg-amber-400/25 border border-amber-300/30 text-amber-100 text-[11px] font-bold transition"
+                >
+                  <span className="flex items-center gap-2">
+                    <span className="material-symbols-outlined text-[15px]">admin_panel_settings</span>
+                    Panel Admin
+                  </span>
+                  <span className="material-symbols-outlined text-[14px]">open_in_new</span>
+                </a>
+              )}
+            </div>
+          </nav>
+
+          {/* Footer: PWA Card + User Avatar Row */}
+          {collapsed ? (
+            <div className="flex flex-col items-center gap-2 pt-2 border-t border-white/15 w-full">
+              <button
+                type="button"
+                onClick={triggerInstall}
+                aria-label="Install Aplikasi Android & iOS"
+                className="glassy-tip-trigger relative w-[38px] h-[38px] rounded-full border-2 border-amber-400/80 bg-white/10 text-amber-300 flex items-center justify-center cursor-pointer hover:scale-105 transition"
+              >
+                <span className="material-symbols-outlined text-[17px]">
+                  {installed ? 'verified' : 'install_mobile'}
+                </span>
+                <span className="glassy-tooltip">
+                  {installed ? 'PWA Terpasang' : 'Install App (Android & iOS)'}
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => onSelectTab('profil')}
+                aria-label={user?.nama_lengkap || 'Profil'}
+                className="glassy-tip-trigger relative w-[38px] h-[38px] rounded-full bg-gradient-to-br from-[#f8b384] to-[#e67e5f] text-slate-900 text-xs font-extrabold flex items-center justify-center cursor-pointer shadow-md"
+              >
+                {initials}
+                <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400 ring-2 ring-[#101c34]" />
+                <span className="glassy-tooltip">
+                  {user?.nama_lengkap} • {user?.kelas?.nama_kelas || getRoleLabel(user?.role)}
+                </span>
+              </button>
+            </div>
+          ) : (
+            <div className="px-3 pt-2 border-t border-white/15 space-y-2.5 glassy-stagger-item">
+              <div className="rounded-2xl bg-white/10 border border-white/15 p-2.5 flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="w-8 h-8 rounded-full border-2 border-amber-400/90 bg-slate-900/40 text-amber-300 flex items-center justify-center shrink-0">
+                    <span className="material-symbols-outlined text-[16px]">
+                      {installed ? 'verified' : 'install_mobile'}
+                    </span>
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-[11px] font-bold text-white leading-tight truncate">
+                      {installed ? 'App Terpasang' : 'PWA Mobile'}
+                    </div>
+                    <div className="text-[10px] text-blue-100/75 leading-tight truncate">
+                      {installed ? 'Android & iOS OK' : 'Notif Real-Time'}
+                    </div>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={triggerInstall}
+                  className="px-2.5 py-1 rounded-full bg-[#e3bc6e] hover:bg-[#f0ca7d] text-slate-950 text-[10px] font-extrabold transition shrink-0 cursor-pointer"
+                >
+                  {installed ? 'Aktif' : 'Install'}
+                </button>
+              </div>
+
+              <div className="flex items-center justify-between gap-2 px-1 pb-0.5">
+                <button
+                  type="button"
+                  onClick={() => onSelectTab('profil')}
+                  className="flex items-center gap-2.5 min-w-0 text-left cursor-pointer group"
+                >
+                  <div className="relative w-8 h-8 rounded-full bg-gradient-to-br from-[#f8b384] to-[#e67e5f] text-slate-900 text-xs font-extrabold flex items-center justify-center shrink-0 shadow-sm">
+                    {initials}
+                    <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400 ring-2 ring-[#111e38]" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-xs font-bold text-white truncate max-w-[125px] group-hover:text-blue-200 transition">
+                      {user?.nama_lengkap}
+                    </div>
+                    <div className="text-[10px] text-blue-100/70 truncate">
+                      {user?.kelas?.nama_kelas || getRoleLabel(user?.role)}
+                    </div>
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={logout}
+                  title="Keluar Akun"
+                  aria-label="Keluar Akun"
+                  className="w-7 h-7 rounded-full hover:bg-white/15 text-blue-100/80 hover:text-rose-300 flex items-center justify-center transition shrink-0 cursor-pointer"
+                >
+                  <span className="material-symbols-outlined text-[16px]">logout</span>
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Right Attached White Utility Rail (Expanded Only) */}
+        <div
+          className={`bg-white flex flex-col items-center justify-between transition-all duration-300 ${
+            collapsed
+              ? 'w-0 opacity-0 pointer-events-none overflow-hidden py-0'
+              : 'w-[48px] opacity-100 py-3.5 shrink-0'
+          }`}
+        >
+          <div className="flex flex-col items-center gap-3">
+            {/* Vibrant Blue Top Action Square */}
             <button
               type="button"
-              onClick={logout}
-              className="w-full mt-1 rounded-xl bg-white hover:bg-red-50 text-[#ba1a1a] border border-surface-high px-3 py-2 text-xs font-semibold transition flex items-center justify-center gap-1.5 cursor-pointer"
+              onClick={() => onSelectTab('jadwal')}
+              title="Buka Jadwal Hari Ini"
+              className="w-9 h-9 rounded-xl bg-[#1d63ed] hover:bg-[#1554d1] text-white shadow-md shadow-blue-600/30 flex items-center justify-center transition cursor-pointer"
             >
-              <span className="material-symbols-outlined text-[16px]">logout</span>
-              Keluar Sesi Akun
+              <span className="material-symbols-outlined text-[18px]">event_note</span>
             </button>
+
+            {/* 3 Contextual White Rail Utility Icons */}
+            <div className="flex flex-col items-center gap-1.5 pt-1">
+              {railActions.map((act) => (
+                <button
+                  key={act.label}
+                  type="button"
+                  onClick={act.onClick}
+                  title={act.label}
+                  aria-label={act.label}
+                  className="w-8 h-8 rounded-full text-slate-600 hover:bg-slate-100 hover:text-slate-900 flex items-center justify-center transition cursor-pointer"
+                >
+                  <span className="material-symbols-outlined text-[18px]">{act.icon}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Vertical Rotated Active Tab Label */}
+          <div className="glassy-vertical-label text-[10px] font-extrabold text-slate-400 select-none pb-1">
+            {activeNavMeta.railLabel}
           </div>
         </div>
       </aside>
 
-      {/* Mobile Drawer */}
+      {/* Mobile Drawer (Glassy V10 Theme) */}
       {mobileMenuOpen && (
         <div className="fixed inset-0 z-50 lg:hidden flex">
           <div
-            className="fixed inset-0 bg-black/40 backdrop-blur-xs"
+            className="fixed inset-0 bg-slate-950/50 backdrop-blur-xs"
             onClick={() => setMobileMenuOpen(false)}
           />
-          <div className="relative w-72 max-w-[85vw] bg-white h-full shadow-2xl flex flex-col z-10 p-4">
-            <div className="flex items-center justify-between pb-4 border-b border-surface-high">
+          <div className="relative w-72 max-w-[85vw] glassy-sidebar-shell rounded-r-[28px] h-full flex flex-col z-10 p-4 text-white">
+            <div className="flex items-center justify-between pb-4 border-b border-white/15">
               <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-primary-container text-white flex items-center justify-center">
+                <div className="w-9 h-9 rounded-full bg-white/20 border border-white/30 text-white flex items-center justify-center">
                   <span className="material-symbols-outlined text-[20px]">school</span>
                 </div>
-                <div className="text-sm font-bold">KSJP STEMATEL</div>
+                <div>
+                  <div className="text-sm font-extrabold">KSJP STEMATEL</div>
+                  <div className="text-[10px] text-blue-100/75">Portal Siswa & Jadwal</div>
+                </div>
               </div>
               <button
                 type="button"
                 onClick={() => setMobileMenuOpen(false)}
-                className="p-1.5 rounded-lg hover:bg-surface-low"
+                className="p-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white"
               >
-                <span className="material-symbols-outlined">close</span>
+                <span className="material-symbols-outlined text-[18px]">close</span>
               </button>
             </div>
-            <div className="flex-1 py-4 space-y-1.5">
+            <div className="flex-1 py-4 space-y-1.5 overflow-y-auto">
               {NAV_ITEMS.map((item) => {
                 const isActive = activeTab === item.id;
                 return (
@@ -225,31 +588,52 @@ export default function Layout({
                       onSelectTab(item.id);
                       setMobileMenuOpen(false);
                     }}
-                    className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-semibold ${
-                      isActive ? 'bg-primary-container text-white' : 'text-on-surface-variant'
+                    className={`w-full flex items-center justify-between px-4 py-2.5 rounded-full text-sm font-semibold transition ${
+                      isActive ? 'bg-white text-slate-900 shadow-md' : 'glassy-pill'
                     }`}
                   >
                     <span className="flex items-center gap-3">
-                      <span className="material-symbols-outlined text-[20px]">{item.icon}</span>
+                      <span
+                        className={`material-symbols-outlined text-[20px] ${
+                          isActive ? 'material-symbols-fill text-slate-900' : 'text-white'
+                        }`}
+                      >
+                        {item.icon}
+                      </span>
                       {item.label}
                     </span>
                     {item.id === 'notifikasi' && unreadCount > 0 && (
-                      <span className="px-2 py-0.5 rounded-full text-[11px] bg-white/20 font-bold">
+                      <span className="w-5 h-5 rounded-full text-[11px] bg-amber-400 text-slate-950 font-extrabold flex items-center justify-center">
                         {unreadCount}
                       </span>
                     )}
                   </button>
                 );
               })}
+
+              {isStaff && (
+                <a
+                  href={adminUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mt-3 w-full flex items-center justify-between px-4 py-2.5 rounded-full bg-amber-400/20 border border-amber-300/30 text-amber-100 text-sm font-semibold"
+                >
+                  <span className="flex items-center gap-3">
+                    <span className="material-symbols-outlined text-[20px]">admin_panel_settings</span>
+                    Panel Admin
+                  </span>
+                  <span className="material-symbols-outlined text-[16px]">open_in_new</span>
+                </a>
+              )}
             </div>
-            <div className="space-y-2 pt-3 border-t border-surface-high">
+            <div className="space-y-2 pt-3 border-t border-white/15">
               <button
                 type="button"
                 onClick={() => {
                   setMobileMenuOpen(false);
                   triggerInstall();
                 }}
-                className="w-full rounded-xl bg-primary-fixed/60 text-primary-container py-2.5 px-3 text-sm font-bold flex items-center justify-center gap-2 cursor-pointer"
+                className="w-full rounded-full bg-[#e3bc6e] text-slate-950 py-2.5 px-3 text-sm font-bold flex items-center justify-center gap-2 cursor-pointer"
               >
                 <span className="material-symbols-outlined text-[18px]">install_mobile</span>
                 {installed ? 'Aplikasi Terpasang' : 'Install App (Android & iOS)'}
@@ -257,7 +641,7 @@ export default function Layout({
               <button
                 type="button"
                 onClick={logout}
-                className="w-full rounded-xl bg-red-50 text-[#ba1a1a] py-2.5 text-sm font-semibold cursor-pointer"
+                className="w-full rounded-full bg-rose-500/20 border border-rose-300/30 text-rose-100 py-2.5 text-sm font-semibold cursor-pointer"
               >
                 Keluar Akun
               </button>
@@ -266,8 +650,12 @@ export default function Layout({
         </div>
       )}
 
-      {/* Main Content Wrapper */}
-      <div className="flex-1 lg:pl-72 flex flex-col min-w-0">
+      {/* Main Content Wrapper (Dynamic Padding Matching Floating Sidebar Width) */}
+      <div
+        className={`flex-1 flex flex-col min-w-0 transition-[padding] duration-300 ease-out ${
+          collapsed ? 'lg:pl-[96px]' : 'lg:pl-[334px]'
+        }`}
+      >
         {/* Frosted Topbar (h-20) */}
         <header className="h-20 sticky top-0 z-20 bg-surface/90 backdrop-blur-xl border-b border-surface-high/60 px-4 sm:px-8 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3 flex-1 min-w-0">
