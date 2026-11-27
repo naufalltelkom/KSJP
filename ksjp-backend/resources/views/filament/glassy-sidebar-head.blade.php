@@ -2,6 +2,11 @@
     /* =========================================================================
        Glassy Sidebar V10 for Filament v5 (Inspired by @paulcodes4 TikTok Video)
        ========================================================================= */
+    .fi-sidebar .ksjp-brand-icon-wrap {
+        background: rgba(255, 255, 255, 0.20) !important;
+        border: 1px solid rgba(255, 255, 255, 0.35) !important;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25) !important;
+    }
     .fi-sidebar .ksjp-brand-title {
         color: #ffffff !important;
     }
