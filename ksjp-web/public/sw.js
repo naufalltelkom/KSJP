@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ksjp-stematel-shell-v3';
+const CACHE_NAME = 'ksjp-stematel-shell-v4';
 const APP_SHELL = ['/', '/manifest.webmanifest', '/favicon.svg', '/icons/icon-192.png', '/icons/apple-touch-icon.png'];
 
 self.addEventListener('install', (event) => {
@@ -66,9 +66,9 @@ self.addEventListener('push', (event) => {
     icon: '/icons/icon-192.png',
     badge: '/icons/icon-192.png',
     tag: payload.tag || 'ksjp-push',
-    renotify: true,
+    renotify: Boolean(payload.renotify),
     vibrate: [200, 100, 200],
-    data: { url: payload.url || '/' },
+    data: { url: payload.url || '/', tag: payload.tag || '' },
   };
 
   event.waitUntil(self.registration.showNotification(title, options));

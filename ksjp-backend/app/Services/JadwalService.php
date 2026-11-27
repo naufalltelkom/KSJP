@@ -209,14 +209,14 @@ class JadwalService
         $peringatanJudul = null;
         $pesanPengingat = null;
 
-        if ($isMenjelangSesiPertama && $menitMenujuBerikutnya !== null && $menitMenujuBerikutnya <= 10 && $menitMenujuBerikutnya >= 1) {
-            // 3. Pengingat Jam Masuk (10 menit sebelum sesi 1 mulai, misal 06:50 sebelum 07:00)
+        if ($isMenjelangSesiPertama && $menitMenujuBerikutnya !== null && $menitMenujuBerikutnya <= 5 && $menitMenujuBerikutnya >= 1) {
+            // 3. Pengingat Jam Masuk (5 menit sebelum sesi 1 mulai, misal 06:55 sebelum 07:00)
             $peringatanJenis = 'jam_masuk';
             $peringatanJudul = 'Pengingat Jam Masuk';
             $jamMasuk = substr((string) $slotBerikutnya['jam_mulai'], 0, 5);
             $pesanPengingat = "{$menitMenujuBerikutnya} menit lagi jam masuk / sesi 1 mulai ({$jamMasuk} WIB): {$slotBerikutnya['mata_pelajaran']} • Ruang {$slotBerikutnya['ruangan']}.";
-        } elseif ($isSesiTerakhir && $sisaMenitSelesai !== null && $sisaMenitSelesai <= 10 && $sisaMenitSelesai >= 1) {
-            // 4. Sesi Terakhir Akan Selesai / Jam Pulang (10 menit sebelum selesai, termasuk Ekskul hari Kamis)
+        } elseif ($isSesiTerakhir && $sisaMenitSelesai !== null && $sisaMenitSelesai <= 5 && $sisaMenitSelesai >= 1) {
+            // 4. Sesi Terakhir Akan Selesai / Jam Pulang (5 menit sebelum pulang, termasuk Ekskul hari Kamis)
             $peringatanJenis = 'sesi_terakhir';
             $peringatanJudul = 'Sesi Terakhir Akan Selesai';
             $jamPulang = substr((string) $slotAktif['jam_selesai'], 0, 5);

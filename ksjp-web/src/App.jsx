@@ -16,6 +16,9 @@ import {
 } from './services/api';
 import {
   evaluateLocalBellAlert,
+  getWibDateString,
+  hasBellAlertBeenSent,
+  markBellAlertSent,
   showOsPopupNotification,
   syncExistingPushSubscription,
 } from './utils/notifications';
@@ -37,7 +40,6 @@ function PortalShell() {
 
   const knownNotifIdsRef = useRef(new Set());
   const firstPollDoneRef = useRef(false);
-  const lastBellKeyRef = useRef('');
 
   const loadNotifikasi = useCallback(async (showToastOnNew = false) => {
     try {
@@ -64,11 +66,17 @@ function PortalShell() {
 
       const bell = res?.pengingat_pergantian_jam;
       if (bell?.pengingat_aktif && bell?.pesan_pengingat) {
-        const todayStr = new Date().toISOString().slice(0, 10);
+        const todayStr = getWibDateString();
         const bellStage = bell.peringatan_jenis || 'bell';
-        const bellKey = `${todayStr}-${bellStage}-${bell.slot_aktif?.id || 'x'}-${bell.slot_berikutnya?.id || 'y'}`;
-        if (lastBellKeyRef.current !== bellKey) {
-          lastBellKeyRef.current = bellKey;
+        const slotRefRaw =
+          bellStage === 'pergantian_pelajaran'
+            ? bell.slot_berikutnya?.jam_mulai || bell.slot_aktif?.jam_selesai || 'end'
+            : bell.slot_aktif?.jam_selesai || bell.slot_berikutnya?.jam_mulai || 'slot';
+        const slotRef = String(slotRefRaw).replace(/[^a-zA-Z0-9]/g, '');
+        const bellTag = `ksjp_bell_${todayStr}_${bellStage}_${slotRef}`;
+
+        if (!hasBellAlertBeenSent(bellTag)) {
+          markBellAlertSent(bellTag);
           const bellTitle = bell.peringatan_judul || 'Pengingat Pergantian Jam KSJP';
           if (showToastOnNew) {
             setToast({
@@ -76,7 +84,7 @@ function PortalShell() {
               message: bell.pesan_pengingat,
             });
           }
-          showOsPopupNotification(bellTitle, bell.pesan_pengingat, `ksjp-bell-${bellKey}`);
+          showOsPopupNotification(bellTitle, bell.pesan_pengingat, bellTag);
         }
       }
 
@@ -159,12 +167,11 @@ function PortalShell() {
       const alert = evaluateLocalBellAlert(jadwalData.harian);
       if (!alert) return;
 
-      const storageKey = `ksjp_bell_sent_${alert.key}`;
-      if (localStorage.getItem(storageKey)) return;
+      if (hasBellAlertBeenSent(alert.key)) return;
 
-      localStorage.setItem(storageKey, '1');
+      markBellAlertSent(alert.key);
       setToast({ title: alert.title, message: alert.body });
-      showOsPopupNotification(alert.title, alert.body, `ksjp-bell-${alert.key}`);
+      showOsPopupNotification(alert.title, alert.body, alert.key);
     };
 
     checkBell();

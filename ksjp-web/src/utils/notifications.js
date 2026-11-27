@@ -26,7 +26,12 @@ function urlBase64ToUint8Array(base64String) {
   return outputArray;
 }
 
-export async function showOsPopupNotification(title, body, tag = 'ksjp-popup') {
+export async function showOsPopupNotification(
+  title,
+  body,
+  tag = 'ksjp-popup',
+  { renotify = false } = {}
+) {
   if (typeof window === 'undefined' || !('Notification' in window)) {
     return false;
   }
@@ -39,7 +44,7 @@ export async function showOsPopupNotification(title, body, tag = 'ksjp-popup') {
     icon: '/icons/icon-192.png',
     badge: '/icons/icon-192.png',
     tag,
-    renotify: true,
+    renotify: Boolean(renotify),
     vibrate: [150, 80, 150],
   };
 
@@ -47,6 +52,10 @@ export async function showOsPopupNotification(title, body, tag = 'ksjp-popup') {
     if ('serviceWorker' in navigator) {
       const reg = await navigator.serviceWorker.getRegistration();
       if (reg?.showNotification) {
+        if (!renotify && tag && tag.startsWith('ksjp_bell_') && reg.getNotifications) {
+          const existing = await reg.getNotifications({ tag }).catch(() => []);
+          if (existing.length > 0) return false;
+        }
         await reg.showNotification(title, options);
         return true;
       }
@@ -55,6 +64,10 @@ export async function showOsPopupNotification(title, body, tag = 'ksjp-popup') {
         new Promise((resolve) => setTimeout(() => resolve(null), 1500)),
       ]);
       if (ready?.showNotification) {
+        if (!renotify && tag && tag.startsWith('ksjp_bell_') && ready.getNotifications) {
+          const existing = await ready.getNotifications({ tag }).catch(() => []);
+          if (existing.length > 0) return false;
+        }
         await ready.showNotification(title, options);
         return true;
       }
@@ -199,6 +212,28 @@ function getWibNowParts() {
   return { dateStr, secOfDay };
 }
 
+export function getWibDateString() {
+  return getWibNowParts().dateStr;
+}
+
+export function hasBellAlertBeenSent(tag) {
+  if (typeof window === 'undefined' || !tag) return false;
+  try {
+    return Boolean(window.localStorage.getItem(`ksjp_bell_sent_${tag}`));
+  } catch {
+    return false;
+  }
+}
+
+export function markBellAlertSent(tag) {
+  if (typeof window === 'undefined' || !tag) return;
+  try {
+    window.localStorage.setItem(`ksjp_bell_sent_${tag}`, '1');
+  } catch {
+    // Abaikan error quota storage
+  }
+}
+
 /**
  * Evaluasi timer lokal per 5 detik untuk notifikasi -10 menit & -5 menit sesuai waktu nyata WIB.
  */
@@ -236,11 +271,11 @@ export function evaluateLocalBellAlert(harian) {
   if (isMenjelangSesiPertama) {
     const startSec = parseWibTodaySeconds(slotBerikutnya.jam_mulai);
     const menitMenuju = Math.max(0, Math.ceil((startSec - secOfDay) / 60));
-    if (menitMenuju <= 10 && menitMenuju >= 1) {
+    if (menitMenuju <= 5 && menitMenuju >= 1) {
       const jamMasuk = String(slotBerikutnya.jam_mulai).slice(0, 5);
       const ref = String(slotBerikutnya.jam_mulai).replace(/[^0-9]/g, '');
       return {
-        key: `${dateStr}_masuk_${ref}`,
+        key: `ksjp_bell_${dateStr}_jam_masuk_${ref}`,
         title: 'Pengingat Jam Masuk',
         body: `${menitMenuju} menit lagi jam masuk / sesi 1 mulai (${jamMasuk} WIB): ${slotBerikutnya.mata_pelajaran} • Ruang ${slotBerikutnya.ruangan}.`,
       };
@@ -250,11 +285,11 @@ export function evaluateLocalBellAlert(harian) {
   if (isSesiTerakhir) {
     const endSec = parseWibTodaySeconds(slotAktif.jam_selesai);
     const sisaMenit = Math.max(0, Math.ceil((endSec - secOfDay) / 60));
-    if (sisaMenit <= 10 && sisaMenit >= 1) {
+    if (sisaMenit <= 5 && sisaMenit >= 1) {
       const jamPulang = String(slotAktif.jam_selesai).slice(0, 5);
       const ref = String(slotAktif.jam_selesai).replace(/[^0-9]/g, '');
       return {
-        key: `${dateStr}_pulang_${ref}`,
+        key: `ksjp_bell_${dateStr}_sesi_terakhir_${ref}`,
         title: 'Sesi Terakhir Akan Selesai',
         body: `Sesi terakhir (${slotAktif.mata_pelajaran}) akan selesai dalam ${sisaMenit} menit (jam pulang pukul ${jamPulang} WIB).`,
       };
@@ -269,7 +304,7 @@ export function evaluateLocalBellAlert(harian) {
       const jamNext = String(slotBerikutnya.jam_mulai).slice(0, 5);
       const ref = String(slotBerikutnya.jam_mulai).replace(/[^0-9]/g, '');
       return {
-        key: `${dateStr}_5m_${ref}`,
+        key: `ksjp_bell_${dateStr}_pergantian_pelajaran_${ref}`,
         title: 'Pergantian Pelajaran dan Ruangan',
         body: `Pergantian Pelajaran dan Ruangan dalam ${sisaMenit} menit (${jamNext} WIB): ${slotBerikutnya.mata_pelajaran} • Ruang ${slotBerikutnya.ruangan} • Guru: ${slotBerikutnya.nama_guru}.`,
       };
@@ -279,7 +314,7 @@ export function evaluateLocalBellAlert(harian) {
       const jamEnd = String(slotAktif.jam_selesai).slice(0, 5);
       const ref = String(slotAktif.jam_selesai).replace(/[^0-9]/g, '');
       return {
-        key: `${dateStr}_10m_${ref}`,
+        key: `ksjp_bell_${dateStr}_segera_selesai_${ref}`,
         title: `Sebentar lagi selesai pelajaran ${slotAktif.mata_pelajaran}`,
         body: `Sebentar lagi selesai pelajaran ${slotAktif.mata_pelajaran} (${sisaMenit} menit lagi, pukul ${jamEnd} WIB). Berikutnya: ${slotBerikutnya.mata_pelajaran} (Ruang ${slotBerikutnya.ruangan}).`,
       };
@@ -292,7 +327,7 @@ export function evaluateLocalBellAlert(harian) {
 
     if (menitMenuju <= 5 && menitMenuju >= 1) {
       return {
-        key: `${dateStr}_5m_${ref}`,
+        key: `ksjp_bell_${dateStr}_pergantian_pelajaran_${ref}`,
         title: 'Pergantian Pelajaran dan Ruangan',
         body: `Pergantian Pelajaran dan Ruangan dalam ${menitMenuju} menit (${jamNext} WIB): ${slotBerikutnya.mata_pelajaran} • Ruang ${slotBerikutnya.ruangan} • Guru: ${slotBerikutnya.nama_guru}.`,
       };

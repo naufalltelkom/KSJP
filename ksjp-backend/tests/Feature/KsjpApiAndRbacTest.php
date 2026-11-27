@@ -8,11 +8,15 @@ use App\Models\JadwalPelajaran;
 use App\Models\KalenderAkademik;
 use App\Models\Kelas;
 use App\Models\Notifikasi;
+use App\Models\PushSubscription;
 use App\Models\User;
+use App\Services\WebPushService;
 use Carbon\Carbon;
 use Database\Seeders\DatabaseSeeder;
 use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 class KsjpApiAndRbacTest extends TestCase
@@ -412,8 +416,18 @@ class KsjpApiAndRbacTest extends TestCase
             'nama_guru' => 'Okky',
         ]);
 
-        // 3) Uji Pengingat Jam Masuk Jumat 06:50:00 WIB (10 menit sebelum 07:00 Tadarus)
+        // 3) Uji Pengingat Jam Masuk Jumat: 06:50 belum aktif, tepat 06:55:00 WIB (5 menit sebelum 07:00 Tadarus) aktif
         Carbon::setTestNow(Carbon::parse('2026-11-27 06:50:00', 'Asia/Jakarta'));
+        try {
+            $this->withHeader('Authorization', "Bearer {$token}")
+                ->getJson('/api/jadwal?tanggal=2026-11-27')
+                ->assertOk()
+                ->assertJsonPath('data.pergantian_jam.pengingat_aktif', false);
+        } finally {
+            Carbon::setTestNow();
+        }
+
+        Carbon::setTestNow(Carbon::parse('2026-11-27 06:55:00', 'Asia/Jakarta'));
         try {
             $resMasuk = $this->withHeader('Authorization', "Bearer {$token}")
                 ->getJson('/api/jadwal?tanggal=2026-11-27')
@@ -423,7 +437,7 @@ class KsjpApiAndRbacTest extends TestCase
                 ->assertJsonPath('data.pergantian_jam.peringatan_jenis', 'jam_masuk')
                 ->assertJsonPath('data.pergantian_jam.peringatan_judul', 'Pengingat Jam Masuk');
             $this->assertStringContainsString(
-                '10 menit lagi jam masuk / sesi 1 mulai',
+                '5 menit lagi jam masuk / sesi 1 mulai',
                 (string) $resMasuk->json('data.pergantian_jam.pesan_pengingat'),
             );
         } finally {
@@ -464,8 +478,18 @@ class KsjpApiAndRbacTest extends TestCase
             Carbon::setTestNow();
         }
 
-        // 4) Uji Sesi Terakhir Akan Selesai (Kamis 15:50:00 WIB -> Ekskul Prestasi atau Ekskul Sentra)
+        // 4) Uji Sesi Terakhir Akan Selesai (Kamis 15:50 belum aktif, 15:55:00 WIB / -5m aktif -> Ekskul Prestasi atau Ekskul Sentra)
         Carbon::setTestNow(Carbon::parse('2026-12-03 15:50:00', 'Asia/Jakarta'));
+        try {
+            $this->withHeader('Authorization', "Bearer {$token}")
+                ->getJson('/api/jadwal?tanggal=2026-12-03')
+                ->assertOk()
+                ->assertJsonPath('data.pergantian_jam.pengingat_aktif', false);
+        } finally {
+            Carbon::setTestNow();
+        }
+
+        Carbon::setTestNow(Carbon::parse('2026-12-03 15:55:00', 'Asia/Jakarta'));
         try {
             $resPulang = $this->withHeader('Authorization', "Bearer {$token}")
                 ->getJson('/api/jadwal?tanggal=2026-12-03')
@@ -478,11 +502,84 @@ class KsjpApiAndRbacTest extends TestCase
                 'Ekskul Prestasi atau Ekskul Sentra',
                 (string) $resPulang->json('data.pergantian_jam.pesan_pengingat'),
             );
+            $this->assertStringContainsString(
+                'dalam 5 menit',
+                (string) $resPulang->json('data.pergantian_jam.pesan_pengingat'),
+            );
         } finally {
             Carbon::setTestNow();
         }
 
         // Pastikan ke-4 notifikasi bel tadi TIDAK pernah masuk ke tabel riwayat notifikasi web/app
+        $this->assertSame($initialNotifCount, Notifikasi::count());
+    }
+
+    public function test_bell_reminder_cron_dispatches_strictly_once_per_slot_even_across_repeated_minute_polls(): void
+    {
+        $siswa = User::where('nis', '541251216')->firstOrFail();
+        PushSubscription::create([
+            'id_user' => $siswa->id,
+            'id_kelas' => $siswa->id_kelas,
+            'endpoint' => 'https://fcm.googleapis.com/fcm/send/test-once-endpoint',
+            'endpoint_hash' => hash('sha256', 'https://fcm.googleapis.com/fcm/send/test-once-endpoint'),
+            'p256dh' => 'test-p256dh',
+            'auth' => 'test-auth',
+            'content_encoding' => 'aes128gcm',
+        ]);
+
+        config([
+            'services.webpush.public_key' => 'test-public-key',
+            'services.webpush.private_key' => 'test-private-key',
+        ]);
+
+        $dispatched = [];
+        $fakeWebPush = new class($dispatched) extends WebPushService
+        {
+            /** @var array<int, array<string, mixed>> */
+            public array $captured;
+
+            /** @param array<int, array<string, mixed>> $captured */
+            public function __construct(array &$captured)
+            {
+                $this->captured = &$captured;
+            }
+
+            protected function dispatchBatch(Collection $subscriptions, array $payload): int
+            {
+                $this->captured[] = $payload;
+
+                return $subscriptions->count();
+            }
+        };
+        $this->app->instance(WebPushService::class, $fakeWebPush);
+
+        $windows = [
+            ['2026-12-02 06:55:00', '2026-12-02 06:56:00', '2026-12-02 06:57:00'],
+            ['2026-12-02 13:50:00', '2026-12-02 13:51:00', '2026-12-02 13:52:00'],
+            ['2026-12-02 13:55:00', '2026-12-02 13:56:00', '2026-12-02 13:57:00'],
+            ['2026-12-03 15:55:00', '2026-12-03 15:56:00', '2026-12-03 15:57:00'],
+        ];
+
+        $initialNotifCount = Notifikasi::count();
+
+        foreach ($windows as [$firstMinute, $secondMinute, $thirdMinute]) {
+            Carbon::setTestNow(Carbon::parse($firstMinute, 'Asia/Jakarta'));
+            $this->getJson('/api/cron/bell-reminder')->assertOk()->assertJsonPath('data.pushes_sent', 1);
+
+            Carbon::setTestNow(Carbon::parse($secondMinute, 'Asia/Jakarta'));
+            $this->getJson('/api/cron/bell-reminder')->assertOk()->assertJsonPath('data.pushes_sent', 0);
+
+            Carbon::setTestNow(Carbon::parse($thirdMinute, 'Asia/Jakarta'));
+            $this->getJson('/api/cron/bell-reminder')->assertOk()->assertJsonPath('data.pushes_sent', 0);
+        }
+        Carbon::setTestNow();
+
+        $this->assertCount(4, $fakeWebPush->captured);
+        foreach ($fakeWebPush->captured as $payload) {
+            $this->assertFalse($payload['renotify'] ?? true);
+            $this->assertStringStartsWith('ksjp_bell_', (string) ($payload['tag'] ?? ''));
+        }
+        $this->assertSame(4, DB::table('bell_dispatches')->count());
         $this->assertSame($initialNotifCount, Notifikasi::count());
     }
 }

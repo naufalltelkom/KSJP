@@ -7,7 +7,7 @@ use App\Models\PushSubscription;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Minishlink\WebPush\Subscription;
 use Minishlink\WebPush\WebPush;
@@ -65,7 +65,7 @@ class WebPushService
         $payload = match ($mode) {
             'jam_masuk' => [
                 'title' => 'Pengingat Jam Masuk',
-                'body' => '10 menit lagi jam masuk / sesi 1 mulai (07:00 WIB): Tadarus • Ruang B.2.2.',
+                'body' => '5 menit lagi jam masuk / sesi 1 mulai (07:00 WIB): Tadarus • Ruang B.2.2.',
                 'tag' => 'ksjp-sim-masuk-' . now()->timestamp,
                 'tipe' => 'pergantian_jam',
                 'url' => '/',
@@ -86,7 +86,7 @@ class WebPushService
             ],
             'sesi_terakhir' => [
                 'title' => 'Sesi Terakhir Akan Selesai',
-                'body' => 'Sesi terakhir (Ekskul Prestasi atau Ekskul Sentra) akan selesai dalam 10 menit (jam pulang pukul 16:00 WIB).',
+                'body' => 'Sesi terakhir (Ekskul Prestasi atau Ekskul Sentra) akan selesai dalam 5 menit (jam pulang pukul 16:00 WIB).',
                 'tag' => 'ksjp-sim-pulang-' . now()->timestamp,
                 'tipe' => 'pergantian_jam',
                 'url' => '/',
@@ -115,6 +115,12 @@ class WebPushService
         }
 
         $sekarang = ($now ?? Carbon::now('Asia/Jakarta'))->copy()->setTimezone('Asia/Jakarta');
+        try {
+            DB::table('bell_dispatches')->where('created_at', '<', $sekarang->copy()->subDays(2))->delete();
+        } catch (\Throwable) {
+            // Abaikan error cleanup ringan
+        }
+
         $jadwalService = app(JadwalService::class);
         $kelasIds = PushSubscription::whereNotNull('id_kelas')
             ->distinct()
@@ -144,23 +150,36 @@ class WebPushService
             $slotRef = $jenis === 'pergantian_pelajaran'
                 ? ($bell['slot_berikutnya']['jam_mulai'] ?? $bell['slot_aktif']['jam_selesai'] ?? 'end')
                 : ($bell['slot_aktif']['jam_selesai'] ?? $bell['slot_berikutnya']['jam_mulai'] ?? 'slot');
+            $slotRefClean = preg_replace('/[^a-zA-Z0-9]/', '', (string) $slotRef);
 
-            $dedupKey = sprintf(
+            $dispatchKey = sprintf(
                 'ksjp_bell_%s_%d_%s_%s',
                 $sekarang->toDateString(),
                 (int) $kelasId,
                 $jenis,
-                preg_replace('/[^a-zA-Z0-9]/', '', (string) $slotRef),
+                $slotRefClean,
+            );
+
+            $deviceTag = sprintf(
+                'ksjp_bell_%s_%s_%s',
+                $sekarang->toDateString(),
+                $jenis,
+                $slotRefClean,
             );
 
             try {
-                if (! Cache::store('database')->add($dedupKey, true, now()->addHours(12))) {
+                // Atomic insert di PostgreSQL/SQLite: strictly 1x per slot/hari/kelas meskipun Vercel CACHE_STORE=array
+                $inserted = DB::table('bell_dispatches')->insertOrIgnore([
+                    'dispatch_key' => $dispatchKey,
+                    'created_at' => $sekarang->copy()->utc(),
+                ]);
+
+                if ($inserted < 1) {
                     continue;
                 }
-            } catch (\Throwable) {
-                if (! Cache::add($dedupKey, true, now()->addHours(12))) {
-                    continue;
-                }
+            } catch (\Throwable $e) {
+                Log::warning('Bell dispatch lock error: ' . $e->getMessage());
+                continue;
             }
 
             $subscriptions = PushSubscription::where('id_kelas', $kelasId)->get();
@@ -171,7 +190,8 @@ class WebPushService
             $sent = $this->dispatchBatch($subscriptions, [
                 'title' => $judul,
                 'body' => $pesan,
-                'tag' => $dedupKey,
+                'tag' => $deviceTag,
+                'renotify' => false,
                 'tipe' => 'pergantian_jam',
                 'url' => '/',
             ]);
@@ -196,7 +216,7 @@ class WebPushService
      * @param  Collection<int, PushSubscription>  $subscriptions
      * @param  array<string, mixed>  $payload
      */
-    private function dispatchBatch(Collection $subscriptions, array $payload): int
+    protected function dispatchBatch(Collection $subscriptions, array $payload): int
     {
         try {
             $webPush = new WebPush([
