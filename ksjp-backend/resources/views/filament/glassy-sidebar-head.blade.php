@@ -94,6 +94,7 @@
     .fi-sidebar .fi-sidebar-header-ctn {
         background: transparent !important;
         border: 0 !important;
+        overflow: visible !important;
     }
 
     .fi-sidebar .fi-sidebar-header {
@@ -108,6 +109,7 @@
         align-items: center !important;
         justify-content: space-between !important;
         gap: 8px !important;
+        overflow: visible !important;
     }
 
     .fi-sidebar:not(.fi-sidebar-open) .fi-sidebar-header {
@@ -385,11 +387,11 @@
 
     /* Footer Glass Section */
     .ksjp-fi-footer-glass {
-        padding: 10px 12px 12px 12px;
+        padding: 8px 12px 10px 12px;
         border-top: 1px solid rgba(255, 255, 255, 0.14);
         display: flex;
         flex-direction: column;
-        gap: 10px;
+        gap: 7px;
     }
 
     .fi-sidebar:not(.fi-sidebar-open) .ksjp-fi-footer-glass {
