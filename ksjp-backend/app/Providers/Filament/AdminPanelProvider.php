@@ -32,7 +32,7 @@ class AdminPanelProvider extends PanelProvider
             ->brandName('SMK Telkom Purwokerto')
             ->brandLogo(fn () => view('filament.brand-logo'))
             ->brandLogoHeight('2.5rem')
-            ->favicon(asset('favicon.svg'))
+            ->favicon('/favicon.svg')
             ->spa()
             ->sidebarCollapsibleOnDesktop()
             ->renderHook(PanelsRenderHook::HEAD_END, fn () => view('filament.glassy-sidebar-head'))
