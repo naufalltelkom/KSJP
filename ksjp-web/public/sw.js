@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ksjp-stematel-shell-v14';
+const CACHE_NAME = 'ksjp-stematel-shell-v15';
 const APP_SHELL = [
   '/',
   '/manifest.webmanifest?v=2',
@@ -34,7 +34,16 @@ self.addEventListener('fetch', (event) => {
 
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
-  if (url.pathname.startsWith('/api/')) return;
+  if (
+    url.pathname.startsWith('/api/') ||
+    url.pathname.startsWith('/admin') ||
+    url.pathname.startsWith('/livewire/') ||
+    url.pathname.startsWith('/css/filament/') ||
+    url.pathname.startsWith('/js/filament/') ||
+    url.pathname.startsWith('/fonts/filament/')
+  ) {
+    return;
+  }
 
   if (request.mode === 'navigate') {
     event.respondWith(

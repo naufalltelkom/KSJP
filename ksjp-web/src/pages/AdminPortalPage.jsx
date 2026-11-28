@@ -39,7 +39,7 @@ export default function AdminPortalPage() {
 
   return (
     <div className="flex-1 flex flex-col min-h-0 w-full">
-      <div className="flex-1 flex flex-col min-h-[calc(100dvh-185px)] lg:min-h-[calc(100dvh-120px)] rounded-[24px] sm:rounded-[28px] bg-[#09090b] border border-white/12 shadow-2xl overflow-hidden">
+      <div className="h-[calc(100dvh-180px)] lg:h-[calc(100dvh-118px)] min-h-[480px] flex flex-col rounded-[24px] sm:rounded-[28px] bg-[#09090b] border border-white/12 shadow-2xl overflow-hidden">
         {/* Compact Dark Filament Header Strip */}
         <div className="px-4 py-2.5 bg-[#121216] border-b border-white/10 flex flex-wrap items-center justify-between gap-2 text-white shrink-0">
           <div className="flex items-center gap-2.5 min-w-0">
@@ -80,7 +80,7 @@ export default function AdminPortalPage() {
         )}
 
         {/* Direct Embedded Filament Admin Viewport */}
-        <div className="relative flex-1 min-h-[520px] bg-[#09090b] flex flex-col">
+        <div className="relative flex-1 min-h-0 bg-[#09090b] flex flex-col">
           {(loading || (ssoUrl && !iframeLoaded)) && (
             <div className="absolute inset-0 z-10 bg-[#09090b] flex flex-col items-center justify-center gap-3 text-white p-6">
               <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-[#d91e2a] to-[#930012] flex items-center justify-center shadow-lg shadow-rose-900/40 animate-pulse">
@@ -99,7 +99,7 @@ export default function AdminPortalPage() {
               src={ssoUrl}
               title="KSJP Stematel — Filament Admin"
               onLoad={() => setIframeLoaded(true)}
-              className="w-full flex-1 min-h-[520px] border-0 bg-[#09090b]"
+              className="w-full flex-1 min-h-0 border-0 bg-[#09090b]"
               allow="fullscreen"
             />
           )}

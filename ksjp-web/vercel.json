@@ -64,7 +64,35 @@
       "destination": "https://ksjp-stematel-api.vercel.app/api/$1"
     },
     {
-      "source": "/((?!downloads/|api/|icons/|manifest\\.webmanifest|sw\\.js|favicon\\.svg).*)",
+      "source": "/admin-sso",
+      "destination": "https://ksjp-stematel-api.vercel.app/admin-sso"
+    },
+    {
+      "source": "/admin",
+      "destination": "https://ksjp-stematel-api.vercel.app/admin"
+    },
+    {
+      "source": "/admin/(.*)",
+      "destination": "https://ksjp-stematel-api.vercel.app/admin/$1"
+    },
+    {
+      "source": "/livewire/(.*)",
+      "destination": "https://ksjp-stematel-api.vercel.app/livewire/$1"
+    },
+    {
+      "source": "/css/filament/(.*)",
+      "destination": "https://ksjp-stematel-api.vercel.app/css/filament/$1"
+    },
+    {
+      "source": "/js/filament/(.*)",
+      "destination": "https://ksjp-stematel-api.vercel.app/js/filament/$1"
+    },
+    {
+      "source": "/fonts/filament/(.*)",
+      "destination": "https://ksjp-stematel-api.vercel.app/fonts/filament/$1"
+    },
+    {
+      "source": "/((?!downloads/|api/|icons/|images/|manifest\\.webmanifest|sw\\.js|favicon\\.svg|admin-sso|admin(?:/|$)|livewire/|css/filament/|js/filament/|fonts/filament/).*)",
       "destination": "/index.html"
     }
   ]
