@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\AdminPortalController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\JadwalController;
 use App\Http\Controllers\Api\KalenderController;
@@ -8,6 +9,7 @@ use App\Http\Controllers\Api\PushSubscriptionController;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/login', [AuthController::class, 'login']);
+Route::post('/register', [AuthController::class, 'register']);
 Route::get('/push/vapid-public-key', [PushSubscriptionController::class, 'vapidPublicKey']);
 Route::match(['get', 'post'], '/cron/bell-reminder', [PushSubscriptionController::class, 'runBellReminder']);
 
@@ -25,4 +27,12 @@ Route::middleware('auth:sanctum')->group(function (): void {
     Route::post('/push/subscribe', [PushSubscriptionController::class, 'subscribe']);
     Route::post('/push/unsubscribe', [PushSubscriptionController::class, 'unsubscribe']);
     Route::post('/push/test', [PushSubscriptionController::class, 'test']);
+
+    Route::prefix('/admin')->group(function (): void {
+        Route::get('/overview', [AdminPortalController::class, 'overview']);
+        Route::post('/kalender', [AdminPortalController::class, 'storeKalender']);
+        Route::delete('/kalender/{id}', [AdminPortalController::class, 'deleteKalender']);
+        Route::post('/momentum', [AdminPortalController::class, 'storeMomentum']);
+        Route::delete('/momentum/{id}', [AdminPortalController::class, 'deleteMomentum']);
+    });
 });

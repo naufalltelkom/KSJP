@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { usePwaInstall } from '../context/PwaContext';
 import { getRoleLabel } from '../utils/date';
 
-const NAV_ITEMS = [
+const BASE_NAV_ITEMS = [
   { id: 'dashboard', label: 'Dashboard', railLabel: 'DASHBOARD', icon: 'home' },
   { id: 'jadwal', label: 'Jadwal Pelajaran', railLabel: 'JADWAL', icon: 'schedule' },
   { id: 'kalender', label: 'Kalender Akademik', railLabel: 'KALENDER', icon: 'calendar_month' },
@@ -45,9 +45,18 @@ export default function Layout({
     setLocalSearch(searchQuery);
   }, [searchQuery]);
 
+  const isStaff = user?.role === 'guru' || user?.role === 'admin_organisasi';
+  const navItems = isStaff
+    ? [
+        ...BASE_NAV_ITEMS.slice(0, 4),
+        { id: 'admin', label: 'Halaman Admin', railLabel: 'ADMIN', icon: 'admin_panel_settings' },
+        BASE_NAV_ITEMS[4],
+      ]
+    : BASE_NAV_ITEMS;
+
   const activeNavIndex = Math.max(
     0,
-    NAV_ITEMS.findIndex((item) => item.id === activeTab)
+    navItems.findIndex((item) => item.id === activeTab)
   );
   const displayIndex = dragIndex !== null ? dragIndex : activeNavIndex;
 
@@ -64,7 +73,7 @@ export default function Layout({
     const rect = bottomNavRef.current?.getBoundingClientRect();
     if (!rect || rect.width <= 0) return activeNavIndex;
     const ratio = Math.min(0.999, Math.max(0, (clientX - rect.left) / rect.width));
-    return Math.floor(ratio * NAV_ITEMS.length);
+    return Math.floor(ratio * navItems.length);
   };
 
   const toggleCollapsed = () => {
@@ -108,14 +117,13 @@ export default function Layout({
     .join('')
     .toUpperCase();
 
-  const isStaff = user?.role === 'guru' || user?.role === 'admin_organisasi';
   const adminUrl =
     import.meta.env.VITE_ADMIN_URL ||
     (import.meta.env.DEV
       ? 'http://127.0.0.1:8000/admin'
       : 'https://ksjp-stematel-api.vercel.app/admin');
 
-  const activeNavMeta = NAV_ITEMS.find((n) => n.id === activeTab) || NAV_ITEMS[0];
+  const activeNavMeta = navItems.find((n) => n.id === activeTab) || navItems[0];
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -303,7 +311,7 @@ export default function Layout({
                 : 'pl-3 pr-0 py-2 space-y-1 overflow-y-auto no-scrollbar'
             }`}
           >
-            {NAV_ITEMS.map((item, idx) => {
+            {navItems.map((item, idx) => {
               const isActive = activeTab === item.id;
 
               if (collapsed) {
@@ -622,7 +630,7 @@ export default function Layout({
               </button>
             </div>
             <div className="flex-1 py-4 space-y-1.5 overflow-y-auto">
-              {NAV_ITEMS.map((item) => {
+              {navItems.map((item) => {
                 const isActive = activeTab === item.id;
                 return (
                   <button
@@ -702,13 +710,13 @@ export default function Layout({
           collapsed ? 'lg:pl-[94px]' : 'lg:pl-[298px] xl:pl-[326px]'
         }`}
       >
-        {/* iOS Liquid Glass Topbar (Grey Glass + Red Typography) */}
+        {/* iOS Liquid Glass Topbar (Grey Glass + Black Typography) */}
         <header className="mx-3 sm:mx-6 mt-3.5 h-16 sticky top-3.5 z-20 ios-liquid-glass-nav px-3 sm:px-5 flex items-center justify-between gap-2 sm:gap-3">
           <div className="relative z-10 flex items-center gap-2 sm:gap-2.5 flex-1 min-w-0">
             <button
               type="button"
               onClick={() => setMobileMenuOpen(true)}
-              className="lg:hidden p-2 rounded-full bg-white/45 border border-white/60 text-[#b10019] hover:bg-white/65 transition cursor-pointer shrink-0 flex items-center justify-center"
+              className="lg:hidden p-2 rounded-full bg-white/45 border border-white/60 text-[#111827] hover:bg-white/65 transition cursor-pointer shrink-0 flex items-center justify-center"
               aria-label="Buka menu"
             >
               <span className="material-symbols-outlined text-[20px]">menu</span>
@@ -720,11 +728,11 @@ export default function Layout({
                 alt="Logo KSJP"
                 className="w-8 h-8 rounded-xl object-cover border border-white/60 shrink-0"
               />
-              <span className="text-xs font-extrabold text-[#b10019] truncate">KSJP</span>
+              <span className="text-xs font-extrabold text-[#111827] truncate">KSJP</span>
             </div>
 
             <form onSubmit={handleSearch} className="hidden sm:flex flex-1 max-w-md relative">
-              <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-[#b10019] text-[19px]">
+              <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-[#111827] text-[19px]">
                 search
               </span>
               <input
@@ -732,7 +740,7 @@ export default function Layout({
                 value={localSearch}
                 onChange={(e) => setLocalSearch(e.target.value)}
                 placeholder="Cari agenda kalender, PSTS, UKK, libur..."
-                className="w-full rounded-full bg-white/45 border border-white/65 pl-10 pr-4 py-1.5 text-sm font-semibold text-[#b10019] placeholder:text-[#b10019]/55 focus:outline-none focus:bg-white/65 focus:ring-2 focus:ring-[#d91e2a]/40 transition"
+                className="w-full rounded-full bg-white/45 border border-white/65 pl-10 pr-4 py-1.5 text-sm font-semibold text-[#111827] placeholder:text-[#111827]/60 focus:outline-none focus:bg-white/65 focus:ring-2 focus:ring-slate-900/20 transition"
               />
             </form>
           </div>
@@ -742,13 +750,13 @@ export default function Layout({
               <button
                 type="button"
                 onClick={triggerInstall}
-                className="lg:hidden inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-primary-container text-white text-[11px] font-bold shadow-xs cursor-pointer whitespace-nowrap shrink-0"
+                className="lg:hidden inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-white/50 border border-white/70 text-[#111827] text-[11px] font-bold shadow-xs cursor-pointer whitespace-nowrap shrink-0"
               >
                 <span className="material-symbols-outlined text-[15px]">install_mobile</span>
                 <span>Install</span>
               </button>
             )}
-            <span className="hidden md:inline-flex items-center px-3 py-1.5 rounded-full bg-white/45 border border-white/65 text-xs font-extrabold text-[#b10019]">
+            <span className="hidden md:inline-flex items-center px-3 py-1.5 rounded-full bg-white/45 border border-white/65 text-xs font-extrabold text-[#111827]">
               T.A. 2026/2027
             </span>
 
@@ -758,7 +766,7 @@ export default function Layout({
               className="relative p-2 rounded-full bg-white/45 border border-white/65 hover:bg-white/70 transition cursor-pointer"
               aria-label="Notifikasi"
             >
-              <span className="material-symbols-outlined text-[20px] text-[#b10019]">
+              <span className="material-symbols-outlined text-[20px] text-[#111827]">
                 notifications
               </span>
               {(unreadCount > 0 || pergantianAktif) && (
@@ -775,10 +783,10 @@ export default function Layout({
                 {initials}
               </div>
               <div className="hidden sm:block text-left">
-                <div className="text-xs font-extrabold text-[#b10019] leading-tight max-w-[150px] truncate">
+                <div className="text-xs font-extrabold text-[#111827] leading-tight max-w-[150px] truncate">
                   {user?.nama_lengkap}
                 </div>
-                <div className="text-[11px] font-semibold text-[#b10019]/75 leading-tight">
+                <div className="text-[11px] font-semibold text-[#111827]/75 leading-tight">
                   {user?.kelas?.nama_kelas || getRoleLabel(user?.role)}
                   {user?.nis ? ` • ${user.nis}` : ''}
                 </div>
@@ -793,7 +801,7 @@ export default function Layout({
         </main>
       </div>
 
-      {/* Mobile iOS Liquid Glass Bottom Navigation Bar (Grey Glass + Red Text + Sliding Droplet) */}
+      {/* Mobile iOS Liquid Glass Bottom Navigation Bar (Grey Glass + Black Text; Active Turns Red Only When Droplet Arrives) */}
       <nav
         ref={bottomNavRef}
         onPointerDown={(e) => {
@@ -810,7 +818,7 @@ export default function Layout({
           if (dragIndex === null) return;
           const finalIdx = resolveSwipeIndex(e.clientX);
           setDragIndex(null);
-          const targetItem = NAV_ITEMS[finalIdx];
+          const targetItem = navItems[finalIdx];
           if (targetItem && targetItem.id !== activeTab) {
             onSelectTab(targetItem.id);
           } else {
@@ -821,41 +829,44 @@ export default function Layout({
           setDragIndex(null);
           setLiquidMorphing(false);
         }}
-        className="lg:hidden fixed bottom-3.5 inset-x-3.5 z-30 ios-liquid-glass-nav p-1 grid grid-cols-5 items-center select-none touch-pan-y"
+        className="lg:hidden fixed bottom-3.5 inset-x-3.5 z-30 ios-liquid-glass-nav p-1 grid items-center select-none touch-pan-y"
+        style={{ gridTemplateColumns: `repeat(${navItems.length}, minmax(0, 1fr))` }}
       >
         {/* Sliding & Stretching Liquid Droplet Pill */}
         <span
           aria-hidden="true"
           className={`ios-liquid-droplet ${liquidMorphing ? 'is-morphing' : ''}`}
           style={{
-            width: `calc((100% - 8px) / ${NAV_ITEMS.length})`,
+            width: `calc((100% - 8px) / ${navItems.length})`,
             transform: `translateX(${displayIndex * 100}%) scale(${
               liquidMorphing ? '1.08, 1.14' : '1, 1'
             })`,
           }}
         />
 
-        {NAV_ITEMS.map((item, idx) => {
-          const isActive = displayIndex === idx;
+        {navItems.map((item) => {
+          const isSettledActive = !liquidMorphing && dragIndex === null && activeTab === item.id;
           return (
             <button
               key={item.id}
               type="button"
               onClick={() => onSelectTab(item.id)}
               className={`relative z-10 flex flex-col items-center justify-center gap-0.5 py-2 rounded-full text-[10px] transition-colors duration-200 cursor-pointer ${
-                isActive ? 'text-[#b10019] font-extrabold' : 'text-[#b10019]/65 font-semibold'
+                isSettledActive ? 'text-[#b10019] font-extrabold' : 'text-[#111827] font-semibold'
               }`}
             >
               <span
                 className={`material-symbols-outlined text-[20px] transition-transform duration-200 ${
-                  isActive ? 'material-symbols-fill scale-105' : ''
+                  isSettledActive ? 'material-symbols-fill scale-105' : ''
                 }`}
               >
                 {item.icon}
               </span>
-              <span className="leading-none tracking-tight">{item.label.split(' ')[0]}</span>
+              <span className="leading-none tracking-tight truncate max-w-full px-0.5">
+                {item.id === 'admin' ? 'Admin' : item.label.split(' ')[0]}
+              </span>
               {item.id === 'notifikasi' && unreadCount > 0 && (
-                <span className="absolute top-1.5 right-3.5 w-2 h-2 rounded-full bg-[#d91e2a] ring-1 ring-white" />
+                <span className="absolute top-1.5 right-3 w-2 h-2 rounded-full bg-[#d91e2a] ring-1 ring-white" />
               )}
             </button>
           );

@@ -2,6 +2,28 @@ const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || '/api').replace(/\/$/
 
 const TOKEN_STORAGE_KEY = 'ksjp_sanctum_token';
 const USER_STORAGE_KEY = 'ksjp_auth_user';
+const REGISTERED_ACCOUNTS_KEY = 'ksjp_registered_accounts';
+
+export function getRegisteredAccounts() {
+  try {
+    const raw = localStorage.getItem(REGISTERED_ACCOUNTS_KEY);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+export function saveRegisteredAccount(account) {
+  const existing = getRegisteredAccounts().filter((a) => a.nis !== account.nis);
+  const updated = [account, ...existing].slice(0, 10);
+  try {
+    localStorage.setItem(REGISTERED_ACCOUNTS_KEY, JSON.stringify(updated));
+  } catch {
+    // Abaikan error quota storage
+  }
+  return updated;
+}
 
 export function getStoredToken() {
   return localStorage.getItem(TOKEN_STORAGE_KEY);
@@ -93,6 +115,47 @@ export async function loginRequest(identifier, password) {
   }
 
   return res;
+}
+
+export async function registerRequest({ nama_lengkap, nis, username, jenis_kelamin, password }) {
+  const res = await apiRequest('/register', {
+    method: 'POST',
+    requiresAuth: false,
+    body: {
+      nama_lengkap,
+      nis,
+      username: username || undefined,
+      jenis_kelamin: jenis_kelamin || 'L',
+      password,
+      device_name: 'ksjp-web',
+    },
+  });
+
+  if (res?.data?.token && res?.data?.user) {
+    setAuthSession(res.data.token, res.data.user);
+  }
+
+  return res;
+}
+
+export function fetchAdminOverview() {
+  return apiRequest('/admin/overview');
+}
+
+export function createAdminKalender(payload) {
+  return apiRequest('/admin/kalender', { method: 'POST', body: payload });
+}
+
+export function deleteAdminKalender(id) {
+  return apiRequest(`/admin/kalender/${id}`, { method: 'DELETE' });
+}
+
+export function createAdminMomentum(payload) {
+  return apiRequest('/admin/momentum', { method: 'POST', body: payload });
+}
+
+export function deleteAdminMomentum(id) {
+  return apiRequest(`/admin/momentum/${id}`, { method: 'DELETE' });
 }
 
 export function fetchMe() {

@@ -2,11 +2,14 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
+use App\Models\Kelas;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 class AuthController extends Controller
 {
@@ -62,6 +65,68 @@ class AuthController extends Controller
                 'user' => $this->formatUser($user),
             ],
         ]);
+    }
+
+    /**
+     * Pendaftaran akun siswa baru tanpa mengubah data pengguna yang sudah ada.
+     */
+    public function register(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'nama_lengkap' => ['required', 'string', 'min:3', 'max:120'],
+            'nis' => ['required', 'string', 'min:4', 'max:30', 'unique:users,nis'],
+            'username' => ['nullable', 'string', 'min:3', 'max:60', 'unique:users,username'],
+            'jenis_kelamin' => ['nullable', 'in:L,P'],
+            'password' => ['required', 'string', 'min:6', 'max:100'],
+            'device_name' => ['nullable', 'string', 'max:100'],
+        ], [
+            'nis.unique' => 'NIS tersebut sudah terdaftar di sistem KSJP.',
+            'username.unique' => 'Username tersebut sudah dipakai pengguna lain.',
+        ]);
+
+        $nisClean = trim((string) $validated['nis']);
+        $baseUsername = filled($validated['username'] ?? null)
+            ? Str::slug((string) $validated['username'], '.')
+            : Str::slug($nisClean, '.');
+
+        if ($baseUsername === '') {
+            $baseUsername = 'siswa.' . Str::random(6);
+        }
+
+        $username = $baseUsername;
+        $suffix = 1;
+        while (User::where('username', $username)->exists()) {
+            $username = "{$baseUsername}.{$suffix}";
+            $suffix++;
+        }
+
+        $kelas = Kelas::where('nama_kelas', 'XI PPLG 4')
+            ->where('tahun_ajaran', '2026/2027')
+            ->first() ?? Kelas::query()->first();
+
+        $user = User::create([
+            'nis' => $nisClean,
+            'username' => $username,
+            'nama_lengkap' => trim((string) $validated['nama_lengkap']),
+            'email' => Str::slug($nisClean, '.') . '@student.smktelkom-pwt.sch.id',
+            'role' => UserRole::Siswa,
+            'id_kelas' => $kelas?->id,
+            'jenis_kelamin' => $validated['jenis_kelamin'] ?? 'L',
+            'password' => Hash::make((string) $validated['password']),
+        ])->load('kelas');
+
+        $deviceName = $validated['device_name'] ?? 'ksjp-web';
+        $token = $user->createToken($deviceName)->plainTextToken;
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Pendaftaran akun baru berhasil.',
+            'data' => [
+                'token' => $token,
+                'token_type' => 'Bearer',
+                'user' => $this->formatUser($user),
+            ],
+        ], 201);
     }
 
     /**

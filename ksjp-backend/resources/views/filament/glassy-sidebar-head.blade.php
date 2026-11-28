@@ -705,7 +705,7 @@
         }
     }
 
-    /* iOS Liquid Glass Floating Grey Topbar with Red Typography */
+    /* iOS Liquid Glass Floating Grey Topbar with Black Typography */
     .fi-topbar-ctn {
         padding-top: 12px !important;
         padding-inline-end: 16px !important;
@@ -717,17 +717,17 @@
         border-radius: 9999px !important;
         background: linear-gradient(
             180deg,
-            rgba(74, 78, 88, 0.72) 0%,
-            rgba(48, 51, 59, 0.64) 55%,
-            rgba(38, 40, 47, 0.70) 100%
+            rgba(222, 226, 234, 0.88) 0%,
+            rgba(196, 201, 212, 0.78) 55%,
+            rgba(182, 188, 200, 0.84) 100%
         ) !important;
         backdrop-filter: blur(22px) saturate(180%) !important;
         -webkit-backdrop-filter: blur(22px) saturate(180%) !important;
-        border: 1px solid rgba(255, 255, 255, 0.24) !important;
+        border: 1px solid rgba(255, 255, 255, 0.65) !important;
         box-shadow:
-            0 12px 32px -8px rgba(0, 0, 0, 0.40),
-            inset 0 1px 1px rgba(255, 255, 255, 0.38),
-            inset 0 -1px 1px rgba(255, 255, 255, 0.14) !important;
+            0 12px 32px -8px rgba(0, 0, 0, 0.35),
+            inset 0 1.5px 1px rgba(255, 255, 255, 0.85),
+            inset 0 -1px 1px rgba(255, 255, 255, 0.35) !important;
         min-height: 54px !important;
         height: 54px !important;
         padding-inline: 18px !important;
@@ -738,7 +738,12 @@
     .fi-topbar a,
     .fi-topbar button,
     .fi-topbar svg {
-        color: #ff5c6c !important;
+        color: #111827 !important;
+    }
+
+    .fi-topbar .fi-avatar {
+        background-color: #d91e2a !important;
+        color: #ffffff !important;
     }
 </style>
 

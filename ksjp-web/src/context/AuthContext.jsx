@@ -6,6 +6,8 @@ import {
   getStoredUser,
   loginRequest,
   logoutRequest,
+  registerRequest,
+  setAuthSession,
 } from '../services/api';
 
 const AuthContext = createContext(null);
@@ -43,11 +45,30 @@ export function AuthProvider({ children }) {
     syncProfile();
   }, [syncProfile]);
 
-  const login = useCallback(async (identifier, password) => {
+  const login = useCallback(async (identifier, password, { deferCommit = false } = {}) => {
     const res = await loginRequest(identifier, password);
-    setToken(res.data.token);
-    setUser(res.data.user);
-    return res.data.user;
+    if (!deferCommit) {
+      setToken(res.data.token);
+      setUser(res.data.user);
+    }
+    return res.data;
+  }, []);
+
+  const register = useCallback(async (payload, { deferCommit = false } = {}) => {
+    const res = await registerRequest(payload);
+    if (!deferCommit) {
+      setToken(res.data.token);
+      setUser(res.data.user);
+    }
+    return res.data;
+  }, []);
+
+  const commitAuth = useCallback((authData) => {
+    if (authData?.token && authData?.user) {
+      setAuthSession(authData.token, authData.user);
+      setToken(authData.token);
+      setUser(authData.user);
+    }
   }, []);
 
   const logout = useCallback(async () => {
@@ -64,6 +85,8 @@ export function AuthProvider({ children }) {
         initializing,
         isAuthenticated: Boolean(token && user),
         login,
+        register,
+        commitAuth,
         logout,
         syncProfile,
       }}
@@ -74,9 +97,9 @@ export function AuthProvider({ children }) {
 }
 
 export function useAuth() {
-  const ctx = useContext(AuthContext);
-  if (!ctx) {
-    throw new Error('useAuth harus digunakan di dalam AuthProvider.');
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth harus digunakan di dalam AuthProvider');
   }
-  return ctx;
+  return context;
 }

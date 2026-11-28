@@ -582,4 +582,83 @@ class KsjpApiAndRbacTest extends TestCase
         $this->assertSame(4, DB::table('bell_dispatches')->count());
         $this->assertSame($initialNotifCount, Notifikasi::count());
     }
+
+    public function test_student_registration_creates_new_siswa_without_modifying_existing_seeded_users(): void
+    {
+        $initialUsersCount = User::count();
+
+        $res = $this->postJson('/api/register', [
+            'nama_lengkap' => 'Siti Aisyah Putri',
+            'nis' => '541259999',
+            'jenis_kelamin' => 'P',
+            'password' => 'rahasia123',
+        ]);
+
+        $res->assertCreated()
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('data.user.nis', '541259999')
+            ->assertJsonPath('data.user.role', 'siswa')
+            ->assertJsonPath('data.user.kelas.nama_kelas', 'XI PPLG 4');
+
+        $this->assertSame($initialUsersCount + 1, User::count());
+        $this->assertDatabaseHas('users', [
+            'nis' => '541251004',
+            'nama_lengkap' => 'ACHMAD FANANI',
+        ]);
+    }
+
+    public function test_in_app_admin_api_enforces_three_role_rbac_correctly(): void
+    {
+        $siswa = User::where('nis', '541251004')->firstOrFail();
+        $guru = User::where('email', 'firda@smktelkom-pwt.sch.id')->firstOrFail();
+        $osis = User::where('email', 'osis@smktelkom-pwt.sch.id')->firstOrFail();
+
+        $siswaToken = $siswa->createToken('test')->plainTextToken;
+        $guruToken = $guru->createToken('test')->plainTextToken;
+        $osisToken = $osis->createToken('test')->plainTextToken;
+
+        $this->withHeader('Authorization', "Bearer {$siswaToken}")
+            ->getJson('/api/admin/overview')
+            ->assertForbidden();
+
+        app('auth')->forgetGuards();
+
+        $this->withHeader('Authorization', "Bearer {$osisToken}")
+            ->getJson('/api/admin/overview')
+            ->assertOk()
+            ->assertJsonPath('data.is_guru', false)
+            ->assertJsonCount(0, 'data.jadwal_reguler')
+            ->assertJsonCount(0, 'data.notifikasi');
+
+        $this->withHeader('Authorization', "Bearer {$osisToken}")
+            ->postJson('/api/admin/momentum', [
+                'tanggal' => '2026-12-10',
+                'jam_mulai' => '08:00',
+                'jam_selesai' => '09:00',
+                'mata_pelajaran_baru' => 'Tes',
+                'nama_guru_baru' => 'OSIS',
+                'ruangan_baru' => 'Aula',
+            ])
+            ->assertForbidden();
+
+        app('auth')->forgetGuards();
+
+        $this->withHeader('Authorization', "Bearer {$guruToken}")
+            ->getJson('/api/admin/overview')
+            ->assertOk()
+            ->assertJsonPath('data.is_guru', true)
+            ->assertJsonPath('data.kelas.nama_kelas', 'XI PPLG 4');
+
+        app('auth')->forgetGuards();
+
+        $this->withHeader('Authorization', "Bearer {$osisToken}")
+            ->postJson('/api/admin/kalender', [
+                'judul' => 'Rapat Koordinasi MPK OSIS',
+                'tanggal_mulai' => '2026-12-15',
+                'kategori' => 'agenda_organisasi',
+                'penyelenggara' => 'OSIS & MPK',
+            ])
+            ->assertCreated()
+            ->assertJsonPath('data.sumber', 'organisasi');
+    }
 }

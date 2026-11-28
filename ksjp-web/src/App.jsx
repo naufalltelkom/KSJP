@@ -7,6 +7,7 @@ import JadwalPage from './pages/JadwalPage';
 import KalenderPage from './pages/KalenderPage';
 import NotifikasiPage from './pages/NotifikasiPage';
 import ProfilPage from './pages/ProfilPage';
+import AdminPortalPage from './pages/AdminPortalPage';
 import {
   fetchJadwal,
   fetchKalender,
@@ -24,8 +25,19 @@ import {
 } from './utils/notifications';
 
 function PortalShell() {
-  const { isAuthenticated, initializing } = useAuth();
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const { user, isAuthenticated, initializing } = useAuth();
+  const [activeTab, setActiveTab] = useState(() => {
+    try {
+      const target = localStorage.getItem('ksjp_post_login_tab');
+      if (target) {
+        localStorage.removeItem('ksjp_post_login_tab');
+        return target;
+      }
+    } catch {
+      // Abaikan
+    }
+    return 'dashboard';
+  });
   const [kalenderSearch, setKalenderSearch] = useState('');
 
   const [jadwalData, setJadwalData] = useState(null);
@@ -124,6 +136,20 @@ function PortalShell() {
       return;
     }
 
+    try {
+      const postTab = localStorage.getItem('ksjp_post_login_tab');
+      if (postTab) {
+        localStorage.removeItem('ksjp_post_login_tab');
+        if (postTab === 'admin' && (user?.role === 'guru' || user?.role === 'admin_organisasi')) {
+          setActiveTab('admin');
+        } else if (postTab !== 'admin') {
+          setActiveTab(postTab);
+        }
+      }
+    } catch {
+      // Abaikan
+    }
+
     loadAllData();
     syncExistingPushSubscription();
 
@@ -151,7 +177,7 @@ function PortalShell() {
       document.removeEventListener('visibilitychange', handleResume);
       window.removeEventListener('focus', pollNow);
     };
-  }, [isAuthenticated, loadAllData, loadNotifikasi]);
+  }, [isAuthenticated, user?.role, loadAllData, loadNotifikasi]);
 
   useEffect(() => {
     if (!toast) return undefined;
@@ -261,6 +287,10 @@ function PortalShell() {
             onMarkAllRead={handleMarkAllRead}
             onRefresh={() => loadNotifikasi(false)}
           />
+        )}
+
+        {activeTab === 'admin' && (user?.role === 'guru' || user?.role === 'admin_organisasi') && (
+          <AdminPortalPage />
         )}
 
         {activeTab === 'profil' && <ProfilPage />}
