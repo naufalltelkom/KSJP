@@ -701,16 +701,25 @@ export default function Layout({
         }`}
       >
         {/* iOS Liquid Glass Topbar (Grey Glass + Red Typography) */}
-        <header className="mx-3 sm:mx-6 mt-3.5 h-16 sticky top-3.5 z-20 ios-liquid-glass-nav px-3 sm:px-5 flex items-center justify-between gap-3">
-          <div className="relative z-10 flex items-center gap-2.5 flex-1 min-w-0">
+        <header className="mx-3 sm:mx-6 mt-3.5 h-16 sticky top-3.5 z-20 ios-liquid-glass-nav px-3 sm:px-5 flex items-center justify-between gap-2 sm:gap-3">
+          <div className="relative z-10 flex items-center gap-2 sm:gap-2.5 flex-1 min-w-0">
             <button
               type="button"
               onClick={() => setMobileMenuOpen(true)}
-              className="lg:hidden p-2 rounded-full bg-white/45 border border-white/60 text-[#b10019] hover:bg-white/65 transition cursor-pointer"
+              className="lg:hidden p-2 rounded-full bg-white/45 border border-white/60 text-[#b10019] hover:bg-white/65 transition cursor-pointer shrink-0 flex items-center justify-center"
               aria-label="Buka menu"
             >
               <span className="material-symbols-outlined text-[20px]">menu</span>
             </button>
+
+            <div className="flex sm:hidden items-center gap-2 min-w-0">
+              <img
+                src="/images/ksjp-logo.png"
+                alt="Logo KSJP"
+                className="w-8 h-8 rounded-xl object-cover border border-white/60 shrink-0"
+              />
+              <span className="text-xs font-extrabold text-[#b10019] truncate">KSJP</span>
+            </div>
 
             <form onSubmit={handleSearch} className="hidden sm:flex flex-1 max-w-md relative">
               <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-[#b10019] text-[19px]">
@@ -726,15 +735,15 @@ export default function Layout({
             </form>
           </div>
 
-          <div className="relative z-10 flex items-center gap-2 sm:gap-2.5">
+          <div className="relative z-10 flex items-center gap-1.5 sm:gap-2.5 shrink-0">
             {isMobileDevice && !installed && (
               <button
                 type="button"
                 onClick={triggerInstall}
-                className="lg:hidden inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-primary-container text-white text-[11px] font-bold shadow-xs cursor-pointer"
+                className="lg:hidden inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-primary-container text-white text-[11px] font-bold shadow-xs cursor-pointer whitespace-nowrap shrink-0"
               >
                 <span className="material-symbols-outlined text-[15px]">install_mobile</span>
-                <span>Install App</span>
+                <span>Install</span>
               </button>
             )}
             <span className="hidden md:inline-flex items-center px-3 py-1.5 rounded-full bg-white/45 border border-white/65 text-xs font-extrabold text-[#b10019]">
