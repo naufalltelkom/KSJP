@@ -9,6 +9,8 @@ import { useEffect, useState } from 'react';
 export default function KsjpSplashOverlay({
   visible,
   status = 'loading', // 'loading' | 'done' | 'error'
+  loadingLabel = 'Menghubungkan ke Portal...',
+  doneLabel = 'Sesi Terverifikasi',
   onComplete,
 }) {
   const [assembled, setAssembled] = useState(false);
@@ -272,10 +274,10 @@ export default function KsjpSplashOverlay({
                   <span className="w-4 h-4 rounded-full bg-emerald-500 text-white inline-flex items-center justify-center text-[11px]">
                     ✓
                   </span>
-                  <span className="text-emerald-400">Sesi Terverifikasi</span>
+                  <span className="text-emerald-400">{doneLabel}</span>
                 </>
               ) : (
-                <span>Menghubungkan ke Portal...</span>
+                <span>{loadingLabel}</span>
               )}
             </span>
             <span className="font-mono text-sm font-extrabold text-rose-400 tabular-nums">

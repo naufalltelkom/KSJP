@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Layout from './components/Layout';
+import KsjpSplashOverlay from './components/KsjpSplashOverlay';
 import LoginView from './components/LoginView';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import DashboardPage from './pages/DashboardPage';
@@ -44,9 +45,21 @@ function PortalShell() {
   });
   const [loadingInitial, setLoadingInitial] = useState(false);
   const [toast, setToast] = useState(null);
+  const [startupStage, setStartupStage] = useState('loading'); // 'loading' | 'done' | 'hidden'
 
+  const bootStartedAtRef = useRef(Date.now());
   const knownNotifIdsRef = useRef(new Set());
   const firstPollDoneRef = useRef(false);
+
+  useEffect(() => {
+    if (initializing || startupStage !== 'loading') return undefined;
+    const elapsed = Date.now() - bootStartedAtRef.current;
+    const remaining = Math.max(0, 1050 - elapsed);
+    const timer = setTimeout(() => {
+      setStartupStage('done');
+    }, remaining);
+    return () => clearTimeout(timer);
+  }, [initializing, startupStage]);
 
   const loadNotifikasi = useCallback(async (showToastOnNew = false) => {
     try {
@@ -225,18 +238,15 @@ function PortalShell() {
     }
   }, []);
 
-  if (initializing) {
+  if (startupStage !== 'hidden' || initializing) {
     return (
-      <div className="min-h-screen bg-surface flex items-center justify-center">
-        <div className="text-center space-y-2">
-          <img
-            src="/images/ksjp-logo.png"
-            alt="KSJP Logo"
-            className="w-14 h-14 rounded-2xl mx-auto shadow-md animate-pulse object-cover"
-          />
-          <div className="text-sm font-bold text-on-surface">Memuat Portal KSJP...</div>
-        </div>
-      </div>
+      <KsjpSplashOverlay
+        visible
+        status={!initializing && startupStage === 'done' ? 'done' : 'loading'}
+        loadingLabel="Memuat Aplikasi KSJP..."
+        doneLabel="Aplikasi Siap"
+        onComplete={() => setStartupStage('hidden')}
+      />
     );
   }
 

@@ -1,5 +1,16 @@
-const CACHE_NAME = 'ksjp-stematel-shell-v12';
-const APP_SHELL = ['/', '/manifest.webmanifest', '/images/ksjp-logo.png', '/icons/icon-192.png', '/icons/apple-touch-icon.png'];
+const CACHE_NAME = 'ksjp-stematel-shell-v13';
+const APP_SHELL = [
+  '/',
+  '/manifest.webmanifest?v=2',
+  '/favicon.svg?v=2',
+  '/images/ksjp-logo-v2.png',
+  '/images/ksjp-logo.png',
+  '/icons/ksjp-icon-192-v2.png',
+  '/icons/ksjp-icon-512-v2.png',
+  '/icons/ksjp-apple-touch-icon-v2.png',
+  '/icons/icon-192.png',
+  '/icons/apple-touch-icon.png',
+];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -38,6 +49,27 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // Network-First untuk manifest & aset ikon agar logo terbarunya langsung terbaca di Android/iOS
+  if (
+    url.pathname === '/manifest.webmanifest' ||
+    url.pathname === '/favicon.svg' ||
+    url.pathname.startsWith('/icons/') ||
+    url.pathname.startsWith('/images/')
+  ) {
+    event.respondWith(
+      fetch(request)
+        .then((res) => {
+          if (res && res.status === 200) {
+            const copy = res.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(request, copy)).catch(() => {});
+          }
+          return res;
+        })
+        .catch(() => caches.match(request))
+    );
+    return;
+  }
+
   event.respondWith(
     caches.match(request).then((cached) => {
       if (cached) return cached;
@@ -63,8 +95,8 @@ self.addEventListener('push', (event) => {
   const title = payload.title || 'KSJP SMK Telkom Purwokerto';
   const options = {
     body: payload.body || 'Ada pembaruan jadwal atau kalender terbaru.',
-    icon: '/icons/icon-192.png',
-    badge: '/icons/icon-192.png',
+    icon: '/icons/ksjp-icon-192-v2.png',
+    badge: '/icons/ksjp-icon-192-v2.png',
     tag: payload.tag || 'ksjp-push',
     renotify: Boolean(payload.renotify),
     vibrate: [200, 100, 200],
