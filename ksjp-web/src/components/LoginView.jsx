@@ -77,8 +77,12 @@ export default function LoginView() {
     try {
       const data = await authPromiseFactory();
       pendingAuthRef.current = data;
+      const resolvedTab =
+        targetTab === 'admin' || data?.user?.role === 'guru' || data?.user?.role === 'admin_organisasi'
+          ? 'admin'
+          : targetTab;
       try {
-        localStorage.setItem('ksjp_post_login_tab', targetTab);
+        localStorage.setItem('ksjp_post_login_tab', resolvedTab);
       } catch {
         // Abaikan
       }

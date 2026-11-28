@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ksjp-stematel-shell-v11';
+const CACHE_NAME = 'ksjp-stematel-shell-v12';
 const APP_SHELL = ['/', '/manifest.webmanifest', '/images/ksjp-logo.png', '/icons/icon-192.png', '/icons/apple-touch-icon.png'];
 
 self.addEventListener('install', (event) => {

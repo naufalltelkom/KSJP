@@ -445,21 +445,6 @@ export default function Layout({
                   )
                 )}
               </div>
-
-              {isStaff && !collapsed && (
-                <a
-                  href={adminUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="mt-2.5 w-full flex items-center justify-between px-3 py-2 rounded-full bg-amber-400/15 hover:bg-amber-400/25 border border-amber-300/30 text-amber-100 text-[11px] font-bold transition"
-                >
-                  <span className="flex items-center gap-2">
-                    <span className="material-symbols-outlined text-[15px]">admin_panel_settings</span>
-                    Panel Admin
-                  </span>
-                  <span className="material-symbols-outlined text-[14px]">open_in_new</span>
-                </a>
-              )}
             </div>
           </nav>
 

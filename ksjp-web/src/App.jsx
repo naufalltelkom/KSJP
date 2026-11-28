@@ -28,15 +28,10 @@ function PortalShell() {
   const { user, isAuthenticated, initializing } = useAuth();
   const [activeTab, setActiveTab] = useState(() => {
     try {
-      const target = localStorage.getItem('ksjp_post_login_tab');
-      if (target) {
-        localStorage.removeItem('ksjp_post_login_tab');
-        return target;
-      }
+      return localStorage.getItem('ksjp_post_login_tab') || 'dashboard';
     } catch {
-      // Abaikan
+      return 'dashboard';
     }
-    return 'dashboard';
   });
   const [kalenderSearch, setKalenderSearch] = useState('');
 
@@ -136,15 +131,22 @@ function PortalShell() {
       return;
     }
 
+    let cleanupTabTimer = null;
     try {
       const postTab = localStorage.getItem('ksjp_post_login_tab');
       if (postTab) {
-        localStorage.removeItem('ksjp_post_login_tab');
         if (postTab === 'admin' && (user?.role === 'guru' || user?.role === 'admin_organisasi')) {
           setActiveTab('admin');
         } else if (postTab !== 'admin') {
           setActiveTab(postTab);
         }
+        cleanupTabTimer = setTimeout(() => {
+          try {
+            localStorage.removeItem('ksjp_post_login_tab');
+          } catch {
+            // Abaikan
+          }
+        }, 250);
       }
     } catch {
       // Abaikan
@@ -173,6 +175,7 @@ function PortalShell() {
     window.addEventListener('focus', pollNow);
 
     return () => {
+      if (cleanupTabTimer) clearTimeout(cleanupTabTimer);
       clearInterval(interval);
       document.removeEventListener('visibilitychange', handleResume);
       window.removeEventListener('focus', pollNow);
