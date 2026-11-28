@@ -112,50 +112,50 @@ export default function LoginView() {
 
       {/* Main Hero + Overlapping Card ("Merah Ditumpuk Putih") */}
       <main className="flex-1">
-        <div className="bg-gradient-to-br from-primary via-primary-container to-tertiary text-white pt-10 pb-28 px-4 sm:px-8">
-          <div className="max-w-7xl mx-auto grid lg:grid-cols-12 gap-8 items-center">
-            <div className="lg:col-span-7 space-y-5">
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/15 backdrop-blur-sm text-xs font-semibold tracking-wide">
+        <div className="bg-gradient-to-br from-primary via-primary-container to-tertiary text-white pt-6 pb-16 px-4 sm:px-8">
+          <div className="max-w-7xl mx-auto grid lg:grid-cols-12 gap-6 items-center">
+            <div className="lg:col-span-7 space-y-3.5">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/15 backdrop-blur-sm text-[11px] font-semibold tracking-wide">
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
                 SISTEM AKADEMIK REAL-TIME • LIVE SYNC SANCTUM
               </div>
 
-              <h1 className="text-3xl sm:text-4xl lg:text-[40px] font-extrabold tracking-tight leading-tight">
+              <h1 className="text-2xl sm:text-3xl lg:text-[34px] font-extrabold tracking-tight leading-tight">
                 Pusat Kalender Siswa & Jadwal Pelajaran Digital
               </h1>
 
-              <p className="text-white/85 text-sm sm:text-base max-w-2xl leading-relaxed">
+              <p className="text-white/85 text-xs sm:text-sm max-w-2xl leading-relaxed">
                 Pantau jadwal pelajaran reguler, pembaruan mendadak{' '}
                 <span className="font-semibold text-white">Jadwal Dinamis (Momentum)</span>,
                 kalender pendidikan resmi 2026/2027, serta pengingat pergantian jam secara
                 langsung cukup dengan 1x login persisten.
               </p>
 
-              <div className="grid sm:grid-cols-3 gap-3 pt-2">
-                <div className="rounded-2xl bg-white/12 backdrop-blur-sm p-3.5 border border-white/15">
-                  <div className="flex items-center gap-2 font-semibold text-sm">
-                    <span className="material-symbols-outlined text-[18px]">bolt</span>
+              <div className="grid sm:grid-cols-3 gap-2.5 pt-1">
+                <div className="rounded-2xl bg-white/12 backdrop-blur-sm p-3 border border-white/15">
+                  <div className="flex items-center gap-2 font-semibold text-xs sm:text-sm">
+                    <span className="material-symbols-outlined text-[17px]">bolt</span>
                     Jadwal Momentum
                   </div>
-                  <p className="text-xs text-white/80 mt-1">
+                  <p className="text-[11px] text-white/80 mt-0.5 leading-snug">
                     Otomatis menimpa jadwal reguler saat ada guru pengganti atau pindah lab.
                   </p>
                 </div>
-                <div className="rounded-2xl bg-white/12 backdrop-blur-sm p-3.5 border border-white/15">
-                  <div className="flex items-center gap-2 font-semibold text-sm">
-                    <span className="material-symbols-outlined text-[18px]">calendar_month</span>
+                <div className="rounded-2xl bg-white/12 backdrop-blur-sm p-3 border border-white/15">
+                  <div className="flex items-center gap-2 font-semibold text-xs sm:text-sm">
+                    <span className="material-symbols-outlined text-[17px]">calendar_month</span>
                     Kalender 2026/2027
                   </div>
-                  <p className="text-xs text-white/80 mt-1">
+                  <p className="text-[11px] text-white/80 mt-0.5 leading-snug">
                     Matriks 12 bulan lengkap dengan agenda resmi & kegiatan OSIS/Pramuka.
                   </p>
                 </div>
-                <div className="rounded-2xl bg-white/12 backdrop-blur-sm p-3.5 border border-white/15">
-                  <div className="flex items-center gap-2 font-semibold text-sm">
-                    <span className="material-symbols-outlined text-[18px]">notifications_active</span>
+                <div className="rounded-2xl bg-white/12 backdrop-blur-sm p-3 border border-white/15">
+                  <div className="flex items-center gap-2 font-semibold text-xs sm:text-sm">
+                    <span className="material-symbols-outlined text-[17px]">notifications_active</span>
                     Notifikasi Real-time
                   </div>
-                  <p className="text-xs text-white/80 mt-1">
+                  <p className="text-[11px] text-white/80 mt-0.5 leading-snug">
                     Pengingat pergantian jam dan info perubahan jadwal seketika.
                   </p>
                 </div>
@@ -164,7 +164,7 @@ export default function LoginView() {
 
             {/* Right Info Preview on Desktop */}
             <div className="hidden lg:block lg:col-span-5">
-              <div className="rounded-2xl bg-white/12 backdrop-blur-md border border-white/20 p-5 space-y-4">
+              <div className="rounded-2xl bg-white/12 backdrop-blur-md border border-white/20 p-4 space-y-3">
                 <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-white/80">
                   <span>Kelas Percontohan Aktif</span>
                   <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-100">
@@ -172,12 +172,12 @@ export default function LoginView() {
                   </span>
                 </div>
                 <div>
-                  <div className="text-xl font-bold">XI PPLG 4</div>
-                  <div className="text-sm text-white/85">
+                  <div className="text-lg font-bold">XI PPLG 4</div>
+                  <div className="text-xs sm:text-sm text-white/85">
                     Konsentrasi Rekayasa Perangkat Lunak
                   </div>
                 </div>
-                <div className="rounded-xl bg-black/15 p-3 text-xs space-y-1">
+                <div className="rounded-xl bg-black/15 p-2.5 text-xs space-y-0.5">
                   <div className="text-white/70">Wali Kelas</div>
                   <div className="font-semibold text-sm">Firda Ayu Nirmala, S.Kom</div>
                 </div>
@@ -187,7 +187,7 @@ export default function LoginView() {
         </div>
 
         {/* Overlapping White Login Card */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-8 -mt-16 pb-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-8 -mt-10 pb-12">
           <div className="grid lg:grid-cols-12 gap-6 items-start">
             <div className="lg:col-span-7 bg-white rounded-3xl shadow-xl shadow-black/5 p-6 sm:p-8 border border-surface-high/60">
               <div className="flex items-start justify-between gap-4 mb-6">

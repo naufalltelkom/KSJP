@@ -177,13 +177,15 @@ export default function Layout({
       {/* Desktop Floating Glassy Sidebar V10 */}
       <aside
         className={`hidden lg:flex fixed top-3.5 left-3.5 bottom-3.5 z-30 glassy-sidebar-shell select-none ${
-          collapsed ? 'w-[68px] rounded-full overflow-visible' : 'w-[306px] rounded-[30px] overflow-hidden'
+          collapsed
+            ? 'w-[68px] rounded-full overflow-visible'
+            : 'w-[272px] xl:w-[300px] rounded-[30px] overflow-hidden'
         }`}
       >
         {/* Left Translucent Glass Pane */}
         <div
           className={`flex-1 min-w-0 flex flex-col h-full ${
-            collapsed ? 'items-center py-3 px-2 overflow-visible' : 'py-3.5 pl-0 pr-0'
+            collapsed ? 'items-center py-2.5 px-2 overflow-visible' : 'py-2.5 pl-0 pr-0'
           }`}
         >
           {/* Brand Header */}
@@ -297,8 +299,8 @@ export default function Layout({
           <nav
             className={`flex-1 ${
               collapsed
-                ? 'flex flex-col items-center gap-1.5 py-1 overflow-visible w-full'
-                : 'pl-3 pr-0 py-3 space-y-1.5 overflow-y-auto no-scrollbar'
+                ? 'flex flex-col items-center gap-1 py-1 overflow-visible w-full'
+                : 'pl-3 pr-0 py-2 space-y-1 overflow-y-auto no-scrollbar'
             }`}
           >
             {NAV_ITEMS.map((item, idx) => {
@@ -341,7 +343,7 @@ export default function Layout({
                   type="button"
                   onClick={() => onSelectTab(item.id)}
                   style={{ animationDelay: `${idx * 30}ms` }}
-                  className={`glassy-stagger-item flex items-center justify-between px-3.5 py-2.5 text-[13px] font-semibold cursor-pointer ${
+                  className={`glassy-stagger-item flex items-center justify-between px-3.5 py-2 text-[13px] font-semibold cursor-pointer ${
                     isActive
                       ? 'w-full glassy-tab-active pr-4'
                       : 'w-[calc(100%-12px)] rounded-full glassy-pill'
@@ -380,7 +382,7 @@ export default function Layout({
             {/* Divider + Ringkasan Hari Ini (Matches PROJECTS Section with 3 Glowing Dots) */}
             <div
               className={`${
-                collapsed ? 'w-6 my-1.5 border-t border-white/15' : 'mr-3 my-3 pt-3 border-t border-white/15'
+                collapsed ? 'w-6 my-1 border-t border-white/15' : 'mr-3 my-2 pt-2 border-t border-white/15'
               }`}
             >
               {!collapsed && (
@@ -697,7 +699,7 @@ export default function Layout({
       {/* Main Content Wrapper (Dynamic Padding Matching Floating Sidebar Width) */}
       <div
         className={`flex-1 flex flex-col min-w-0 transition-[padding] duration-300 ease-out ${
-          collapsed ? 'lg:pl-[96px]' : 'lg:pl-[334px]'
+          collapsed ? 'lg:pl-[94px]' : 'lg:pl-[298px] xl:pl-[326px]'
         }`}
       >
         {/* iOS Liquid Glass Topbar (Grey Glass + Red Typography) */}
@@ -786,7 +788,7 @@ export default function Layout({
         </header>
 
         {/* Page Body */}
-        <main className="flex-1 p-4 sm:p-8 pb-28 lg:pb-10 max-w-[1440px] w-full mx-auto">
+        <main className="flex-1 p-4 sm:p-5 lg:p-6 pb-28 lg:pb-8 max-w-[1440px] w-full mx-auto">
           {children}
         </main>
       </div>

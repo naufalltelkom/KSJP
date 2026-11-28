@@ -63,11 +63,11 @@ export default function DashboardPage({
   const displayAgenda = upcomingAgenda.length > 0 ? upcomingAgenda : kalenderItems.slice(0, 3);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-5">
       {/* Hero Greeting Banner */}
-      <section className="rounded-3xl bg-gradient-to-br from-primary via-primary-container to-tertiary text-white p-6 sm:p-8 shadow-lg shadow-primary-container/15">
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-          <div className="space-y-3">
+      <section className="rounded-3xl bg-gradient-to-br from-primary via-primary-container to-tertiary text-white p-5 sm:p-6 shadow-lg shadow-primary-container/15">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 sm:gap-5">
+          <div className="space-y-2.5">
             <div className="flex flex-wrap items-center gap-2 text-xs font-semibold">
               {user?.kelas?.nama_kelas && (
                 <span className="px-3 py-1 rounded-full bg-white/20 backdrop-blur-xs">

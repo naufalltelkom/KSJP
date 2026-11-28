@@ -169,11 +169,11 @@ export default function KalenderPage({ kalenderItems = [], externalSearch = '' }
           <div className="text-[11px] font-bold uppercase tracking-wider text-secondary mb-2.5">
             Keterangan Simbol &amp; Indikator Warna
           </div>
-          <div className="grid grid-cols-2 lg:grid-cols-5 gap-x-3 gap-y-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5 gap-x-4 gap-y-2">
             {CALENDAR_LEGEND_ITEMS.map((item) => (
-              <div key={item.key} className="flex items-center gap-2 text-xs text-on-surface">
+              <div key={item.key} className="flex items-center gap-2 text-xs text-on-surface leading-snug">
                 <span className={`w-3.5 h-3.5 rounded-full shrink-0 ${item.dotClass}`} />
-                <span className="truncate">{item.label}</span>
+                <span>{item.label}</span>
               </div>
             ))}
           </div>
@@ -250,7 +250,7 @@ export default function KalenderPage({ kalenderItems = [], externalSearch = '' }
             )}
           </div>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid sm:grid-cols-2 2xl:grid-cols-3 gap-4">
           {visibleMonths.map((m, mIdx) => {
             const cells = buildMonthCells(m.tahun, m.bulan);
             const hideOnMobile = mobileMonthOnly && mIdx !== safeMobileIdx;
@@ -260,11 +260,11 @@ export default function KalenderPage({ kalenderItems = [], externalSearch = '' }
                 className={`${hideOnMobile ? 'hidden sm:flex' : 'flex'} rounded-3xl bg-white p-4 shadow-xs border border-surface-high/60 flex-col justify-between min-w-0`}
               >
                 <div>
-                  <div className="flex items-center justify-between mb-3">
-                    <h2 className="text-sm font-extrabold text-on-surface tracking-tight">
+                  <div className="flex items-center justify-between gap-2 mb-3">
+                    <h2 className="text-sm font-extrabold text-on-surface tracking-tight whitespace-nowrap">
                       {m.label}
                     </h2>
-                    <span className="px-2 py-0.5 rounded-full bg-surface-container text-[10px] font-bold text-secondary">
+                    <span className="px-2 py-0.5 rounded-full bg-surface-container text-[10px] font-bold text-secondary whitespace-nowrap shrink-0">
                       {m.code}
                     </span>
                   </div>
