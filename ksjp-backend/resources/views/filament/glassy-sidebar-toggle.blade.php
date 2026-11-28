@@ -23,15 +23,12 @@
         aria-label="Perluas Sidebar (⌘B)"
         class="ksjp-fi-circle-btn ksjp-fi-expand-emblem"
     >
-        <svg
+        <img
             x-show="! hovered"
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            fill="currentColor"
-            style="width:20px;height:20px;color:#fff;"
-        >
-            <path d="M12 3 1 9l4 2.18v6L12 21l7-3.82v-6l2-1.09V17h2V9L12 3Zm6.82 6L12 12.72 5.18 9 12 5.28 18.82 9ZM17 15.99l-5 2.73-5-2.73v-3.72L12 15l5-2.73v3.72Z" />
-        </svg>
+            src="/images/ksjp-logo.png"
+            alt="Logo KSJP"
+            style="width:30px;height:30px;border-radius:9999px;object-fit:cover;border:1px solid rgba(255,255,255,0.48);"
+        />
         <svg
             x-show="hovered"
             x-cloak

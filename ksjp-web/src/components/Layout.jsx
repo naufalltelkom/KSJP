@@ -35,11 +35,37 @@ export default function Layout({
     }
   });
   const [brandHovered, setBrandHovered] = useState(false);
+  const [liquidMorphing, setLiquidMorphing] = useState(false);
+  const [dragIndex, setDragIndex] = useState(null);
   const sidebarSearchRef = useRef(null);
+  const bottomNavRef = useRef(null);
+  const morphTimerRef = useRef(null);
 
   useEffect(() => {
     setLocalSearch(searchQuery);
   }, [searchQuery]);
+
+  const activeNavIndex = Math.max(
+    0,
+    NAV_ITEMS.findIndex((item) => item.id === activeTab)
+  );
+  const displayIndex = dragIndex !== null ? dragIndex : activeNavIndex;
+
+  useEffect(() => {
+    setLiquidMorphing(true);
+    if (morphTimerRef.current) clearTimeout(morphTimerRef.current);
+    morphTimerRef.current = setTimeout(() => setLiquidMorphing(false), 360);
+    return () => {
+      if (morphTimerRef.current) clearTimeout(morphTimerRef.current);
+    };
+  }, [activeTab]);
+
+  const resolveSwipeIndex = (clientX) => {
+    const rect = bottomNavRef.current?.getBoundingClientRect();
+    if (!rect || rect.width <= 0) return activeNavIndex;
+    const ratio = Math.min(0.999, Math.max(0, (clientX - rect.left) / rect.width));
+    return Math.floor(ratio * NAV_ITEMS.length);
+  };
 
   const toggleCollapsed = () => {
     setCollapsed((prev) => {
@@ -171,9 +197,17 @@ export default function Layout({
                 aria-label="Perluas Sidebar (⌘B)"
                 className="glassy-tip-trigger relative w-[42px] h-[42px] rounded-full glassy-circle-btn flex items-center justify-center cursor-pointer"
               >
-                <span className="material-symbols-outlined text-[20px] text-white transition-transform duration-200">
-                  {brandHovered ? 'dock_to_right' : 'school'}
-                </span>
+                {brandHovered ? (
+                  <span className="material-symbols-outlined text-[20px] text-white transition-transform duration-200">
+                    dock_to_right
+                  </span>
+                ) : (
+                  <img
+                    src="/images/ksjp-logo.png"
+                    alt="Logo KSJP"
+                    className="w-8 h-8 rounded-full object-cover border border-white/40"
+                  />
+                )}
                 <span className="glassy-tooltip flex items-center gap-2">
                   <span>Expand</span>
                   <kbd className="px-1.5 py-0.5 rounded bg-white/15 text-[10px] font-mono text-white/90">
@@ -185,9 +219,11 @@ export default function Layout({
           ) : (
             <div className="px-3.5 pb-3 flex items-center justify-between gap-2">
               <div className="flex items-center gap-2.5 min-w-0">
-                <div className="w-9 h-9 rounded-full bg-white/20 border border-white/35 text-white flex items-center justify-center shadow-inner shrink-0">
-                  <span className="material-symbols-outlined text-[19px]">school</span>
-                </div>
+                <img
+                  src="/images/ksjp-logo.png"
+                  alt="Logo KSJP"
+                  className="w-9 h-9 rounded-xl border border-white/40 shadow-sm object-cover shrink-0"
+                />
                 <div className="min-w-0 glassy-stagger-item">
                   <div className="text-[13px] font-extrabold tracking-tight text-white truncate">
                     KSJP Stematel
@@ -565,9 +601,11 @@ export default function Layout({
           <div className="relative w-72 max-w-[85vw] glassy-sidebar-shell rounded-r-[28px] h-full flex flex-col z-10 p-4 text-white">
             <div className="flex items-center justify-between pb-4 border-b border-white/15">
               <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-full bg-white/20 border border-white/30 text-white flex items-center justify-center">
-                  <span className="material-symbols-outlined text-[20px]">school</span>
-                </div>
+                <img
+                  src="/images/ksjp-logo.png"
+                  alt="Logo KSJP"
+                  className="w-9 h-9 rounded-xl border border-white/40 object-cover shrink-0"
+                />
                 <div>
                   <div className="text-sm font-extrabold">KSJP STEMATEL</div>
                   <div className="text-[10px] text-rose-100/80">Portal Siswa & Jadwal</div>
@@ -662,20 +700,20 @@ export default function Layout({
           collapsed ? 'lg:pl-[96px]' : 'lg:pl-[334px]'
         }`}
       >
-        {/* Frosted Topbar (h-20) */}
-        <header className="h-20 sticky top-0 z-20 bg-surface/90 backdrop-blur-xl border-b border-surface-high/60 px-4 sm:px-8 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3 flex-1 min-w-0">
+        {/* iOS Liquid Glass Topbar (Grey Glass + Red Typography) */}
+        <header className="mx-3 sm:mx-6 mt-3.5 h-16 sticky top-3.5 z-20 ios-liquid-glass-nav px-3 sm:px-5 flex items-center justify-between gap-3">
+          <div className="relative z-10 flex items-center gap-2.5 flex-1 min-w-0">
             <button
               type="button"
               onClick={() => setMobileMenuOpen(true)}
-              className="lg:hidden p-2 rounded-xl bg-white border border-surface-high text-on-surface"
+              className="lg:hidden p-2 rounded-full bg-white/45 border border-white/60 text-[#b10019] hover:bg-white/65 transition cursor-pointer"
               aria-label="Buka menu"
             >
-              <span className="material-symbols-outlined">menu</span>
+              <span className="material-symbols-outlined text-[20px]">menu</span>
             </button>
 
             <form onSubmit={handleSearch} className="hidden sm:flex flex-1 max-w-md relative">
-              <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-secondary text-[20px]">
+              <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-[#b10019] text-[19px]">
                 search
               </span>
               <input
@@ -683,12 +721,12 @@ export default function Layout({
                 value={localSearch}
                 onChange={(e) => setLocalSearch(e.target.value)}
                 placeholder="Cari agenda kalender, PSTS, UKK, libur..."
-                className="w-full rounded-full bg-white border border-surface-high pl-10 pr-4 py-2 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary-container"
+                className="w-full rounded-full bg-white/45 border border-white/65 pl-10 pr-4 py-1.5 text-sm font-semibold text-[#b10019] placeholder:text-[#b10019]/55 focus:outline-none focus:bg-white/65 focus:ring-2 focus:ring-[#d91e2a]/40 transition"
               />
             </form>
           </div>
 
-          <div className="flex items-center gap-2 sm:gap-3">
+          <div className="relative z-10 flex items-center gap-2 sm:gap-2.5">
             {isMobileDevice && !installed && (
               <button
                 type="button"
@@ -699,17 +737,17 @@ export default function Layout({
                 <span>Install App</span>
               </button>
             )}
-            <span className="hidden md:inline-flex items-center px-3 py-1.5 rounded-full bg-surface-container text-xs font-semibold text-on-surface-variant">
+            <span className="hidden md:inline-flex items-center px-3 py-1.5 rounded-full bg-white/45 border border-white/65 text-xs font-extrabold text-[#b10019]">
               T.A. 2026/2027
             </span>
 
             <button
               type="button"
               onClick={() => onSelectTab('notifikasi')}
-              className="relative p-2.5 rounded-full bg-white border border-surface-high hover:bg-surface-low transition cursor-pointer"
+              className="relative p-2 rounded-full bg-white/45 border border-white/65 hover:bg-white/70 transition cursor-pointer"
               aria-label="Notifikasi"
             >
-              <span className="material-symbols-outlined text-[20px] text-on-surface">
+              <span className="material-symbols-outlined text-[20px] text-[#b10019]">
                 notifications
               </span>
               {(unreadCount > 0 || pergantianAktif) && (
@@ -720,16 +758,16 @@ export default function Layout({
             <button
               type="button"
               onClick={() => onSelectTab('profil')}
-              className="flex items-center gap-2.5 pl-1.5 pr-3 py-1 rounded-full bg-white border border-surface-high hover:bg-surface-low transition cursor-pointer"
+              className="flex items-center gap-2 pl-1.5 pr-3 py-1 rounded-full bg-white/45 border border-white/65 hover:bg-white/70 transition cursor-pointer"
             >
-              <div className="w-8 h-8 rounded-full bg-primary-container text-white text-xs font-bold flex items-center justify-center">
+              <div className="w-8 h-8 rounded-full bg-primary-container text-white text-xs font-bold flex items-center justify-center shadow-xs">
                 {initials}
               </div>
               <div className="hidden sm:block text-left">
-                <div className="text-xs font-bold text-on-surface leading-tight max-w-[150px] truncate">
+                <div className="text-xs font-extrabold text-[#b10019] leading-tight max-w-[150px] truncate">
                   {user?.nama_lengkap}
                 </div>
-                <div className="text-[11px] text-secondary leading-tight">
+                <div className="text-[11px] font-semibold text-[#b10019]/75 leading-tight">
                   {user?.kelas?.nama_kelas || getRoleLabel(user?.role)}
                   {user?.nis ? ` • ${user.nis}` : ''}
                 </div>
@@ -739,34 +777,74 @@ export default function Layout({
         </header>
 
         {/* Page Body */}
-        <main className="flex-1 p-4 sm:p-8 pb-24 lg:pb-10 max-w-[1440px] w-full mx-auto">
+        <main className="flex-1 p-4 sm:p-8 pb-28 lg:pb-10 max-w-[1440px] w-full mx-auto">
           {children}
         </main>
       </div>
 
-      {/* Mobile Bottom Navigation Bar */}
-      <nav className="lg:hidden fixed bottom-3 inset-x-3 z-30 bg-white/95 backdrop-blur-md border border-surface-high rounded-2xl shadow-lg px-2 py-1.5 flex items-center justify-around">
-        {NAV_ITEMS.map((item) => {
-          const isActive = activeTab === item.id;
+      {/* Mobile iOS Liquid Glass Bottom Navigation Bar (Grey Glass + Red Text + Sliding Droplet) */}
+      <nav
+        ref={bottomNavRef}
+        onPointerDown={(e) => {
+          if (e.pointerType === 'mouse' && e.button !== 0) return;
+          const idx = resolveSwipeIndex(e.clientX);
+          setDragIndex(idx);
+          setLiquidMorphing(true);
+        }}
+        onPointerMove={(e) => {
+          if (dragIndex === null) return;
+          setDragIndex(resolveSwipeIndex(e.clientX));
+        }}
+        onPointerUp={(e) => {
+          if (dragIndex === null) return;
+          const finalIdx = resolveSwipeIndex(e.clientX);
+          setDragIndex(null);
+          const targetItem = NAV_ITEMS[finalIdx];
+          if (targetItem && targetItem.id !== activeTab) {
+            onSelectTab(targetItem.id);
+          } else {
+            setTimeout(() => setLiquidMorphing(false), 220);
+          }
+        }}
+        onPointerCancel={() => {
+          setDragIndex(null);
+          setLiquidMorphing(false);
+        }}
+        className="lg:hidden fixed bottom-3.5 inset-x-3.5 z-30 ios-liquid-glass-nav p-1 grid grid-cols-5 items-center select-none touch-pan-y"
+      >
+        {/* Sliding & Stretching Liquid Droplet Pill */}
+        <span
+          aria-hidden="true"
+          className={`ios-liquid-droplet ${liquidMorphing ? 'is-morphing' : ''}`}
+          style={{
+            width: `calc((100% - 8px) / ${NAV_ITEMS.length})`,
+            transform: `translateX(${displayIndex * 100}%) scale(${
+              liquidMorphing ? '1.08, 1.14' : '1, 1'
+            })`,
+          }}
+        />
+
+        {NAV_ITEMS.map((item, idx) => {
+          const isActive = displayIndex === idx;
           return (
             <button
               key={item.id}
               type="button"
               onClick={() => onSelectTab(item.id)}
-              className={`relative flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl text-[10px] font-semibold transition ${
-                isActive ? 'bg-primary-fixed/70 text-primary-container' : 'text-secondary'
+              className={`relative z-10 flex flex-col items-center justify-center gap-0.5 py-2 rounded-full text-[10px] transition-colors duration-200 cursor-pointer ${
+                isActive ? 'text-[#b10019] font-extrabold' : 'text-[#b10019]/65 font-semibold'
               }`}
             >
               <span
-                className={`material-symbols-outlined text-[20px] ${
-                  isActive ? 'material-symbols-fill' : ''
+                className={`material-symbols-outlined text-[20px] transition-transform duration-200 ${
+                  isActive ? 'material-symbols-fill scale-105' : ''
                 }`}
               >
                 {item.icon}
               </span>
-              <span>{item.label.split(' ')[0]}</span>
+              <span className="leading-none tracking-tight">{item.label.split(' ')[0]}</span>
               {item.id === 'notifikasi' && unreadCount > 0 && (
-                <span className="absolute top-1 right-2 w-2 h-2 rounded-full bg-primary-container" />
+                <span className="absolute top-1.5 right-3.5 w-2 h-2 rounded-full bg-[#d91e2a] ring-1 ring-white" />
               )}
             </button>
           );

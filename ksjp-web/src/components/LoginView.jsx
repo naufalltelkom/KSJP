@@ -58,25 +58,27 @@ export default function LoginView() {
 
   return (
     <div className="min-h-screen bg-surface flex flex-col">
-      {/* Top Navbar */}
-      <header className="h-20 bg-white/90 backdrop-blur-xl border-b border-surface-high/60 sticky top-0 z-20">
-        <div className="max-w-7xl mx-auto h-full px-4 sm:px-8 flex items-center justify-between">
+      {/* iOS Liquid Glass Top Navbar */}
+      <header className="mx-3 sm:mx-6 mt-3.5 h-16 sticky top-3.5 z-20 ios-liquid-glass-nav">
+        <div className="relative z-10 max-w-7xl mx-auto h-full px-4 sm:px-6 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-primary-container text-white flex items-center justify-center shadow-sm">
-              <span className="material-symbols-outlined text-[22px]">school</span>
-            </div>
+            <img
+              src="/images/ksjp-logo.png"
+              alt="Logo KSJP"
+              className="w-10 h-10 rounded-xl shadow-sm object-cover shrink-0 border border-white/60"
+            />
             <div>
-              <div className="text-sm font-bold tracking-tight text-on-surface">
+              <div className="text-sm font-extrabold tracking-tight text-[#b10019]">
                 SMK TELKOM PURWOKERTO
               </div>
-              <div className="text-[11px] font-semibold text-on-surface-variant tracking-wide uppercase">
-                KSJP • Kalender Siswa & Jadwal Pelajaran
+              <div className="text-[11px] font-bold text-[#b10019]/80 tracking-wide uppercase">
+                KSJP • Kalender Siswa &amp; Jadwal Pelajaran
               </div>
             </div>
           </div>
 
           <div className="flex items-center gap-2 text-xs font-semibold">
-            <span className="hidden md:inline-flex px-3 py-1.5 rounded-full bg-primary-fixed text-on-primary-fixed">
+            <span className="hidden md:inline-flex px-3 py-1.5 rounded-full bg-white/45 border border-white/65 text-[#b10019] font-extrabold">
               Tahun Pelajaran 2026/2027
             </span>
             {isMobileDevice && (
@@ -100,7 +102,7 @@ export default function LoginView() {
               }
               target="_blank"
               rel="noreferrer"
-              className="hidden sm:inline-flex px-3.5 py-1.5 rounded-full bg-surface-container text-on-surface hover:bg-surface-high transition"
+              className="hidden sm:inline-flex px-3.5 py-1.5 rounded-full bg-white/45 border border-white/65 text-[#b10019] font-bold hover:bg-white/70 transition"
             >
               Panel Admin Filament
             </a>

@@ -704,6 +704,42 @@
             transform: translateY(0);
         }
     }
+
+    /* iOS Liquid Glass Floating Grey Topbar with Red Typography */
+    .fi-topbar-ctn {
+        padding-top: 12px !important;
+        padding-inline-end: 16px !important;
+        background: transparent !important;
+    }
+
+    .fi-topbar {
+        position: relative !important;
+        border-radius: 9999px !important;
+        background: linear-gradient(
+            180deg,
+            rgba(74, 78, 88, 0.72) 0%,
+            rgba(48, 51, 59, 0.64) 55%,
+            rgba(38, 40, 47, 0.70) 100%
+        ) !important;
+        backdrop-filter: blur(22px) saturate(180%) !important;
+        -webkit-backdrop-filter: blur(22px) saturate(180%) !important;
+        border: 1px solid rgba(255, 255, 255, 0.24) !important;
+        box-shadow:
+            0 12px 32px -8px rgba(0, 0, 0, 0.40),
+            inset 0 1px 1px rgba(255, 255, 255, 0.38),
+            inset 0 -1px 1px rgba(255, 255, 255, 0.14) !important;
+        min-height: 54px !important;
+        height: 54px !important;
+        padding-inline: 18px !important;
+    }
+
+    .fi-topbar .ksjp-brand-title,
+    .fi-topbar .ksjp-brand-subtitle,
+    .fi-topbar a,
+    .fi-topbar button,
+    .fi-topbar svg {
+        color: #ff5c6c !important;
+    }
 </style>
 
 <script>

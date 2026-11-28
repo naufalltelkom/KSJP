@@ -200,9 +200,11 @@ function PortalShell() {
     return (
       <div className="min-h-screen bg-surface flex items-center justify-center">
         <div className="text-center space-y-2">
-          <div className="w-12 h-12 rounded-2xl bg-primary-container text-white mx-auto flex items-center justify-center animate-pulse">
-            <span className="material-symbols-outlined text-[26px]">school</span>
-          </div>
+          <img
+            src="/images/ksjp-logo.png"
+            alt="KSJP Logo"
+            className="w-14 h-14 rounded-2xl mx-auto shadow-md animate-pulse object-cover"
+          />
           <div className="text-sm font-bold text-on-surface">Memuat Portal KSJP...</div>
         </div>
       </div>
