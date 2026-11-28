@@ -76,6 +76,14 @@
       "destination": "https://ksjp-stematel-api.vercel.app/admin/$1"
     },
     {
+      "source": "/livewire-ac5cb51a/(.*)",
+      "destination": "https://ksjp-stematel-api.vercel.app/livewire-ac5cb51a/$1"
+    },
+    {
+      "source": "/livewire-:hash/(.*)",
+      "destination": "https://ksjp-stematel-api.vercel.app/livewire-:hash/$1"
+    },
+    {
       "source": "/livewire/(.*)",
       "destination": "https://ksjp-stematel-api.vercel.app/livewire/$1"
     },
@@ -92,7 +100,7 @@
       "destination": "https://ksjp-stematel-api.vercel.app/fonts/filament/$1"
     },
     {
-      "source": "/((?!downloads/|api/|icons/|images/|manifest\\.webmanifest|sw\\.js|favicon\\.svg|admin-sso|admin(?:/|$)|livewire/|css/filament/|js/filament/|fonts/filament/).*)",
+      "source": "/((?!downloads/|api/|icons/|images/|manifest\\.webmanifest|sw\\.js|favicon\\.svg|admin-sso|admin(?:/|$)|livewire|css/filament/|js/filament/|fonts/filament/).*)",
       "destination": "/index.html"
     }
   ]
