@@ -31,6 +31,11 @@ class AppServiceProvider extends ServiceProvider
 
         if ($this->app->environment('production') || request()->header('x-forwarded-proto') === 'https') {
             URL::forceScheme('https');
+            config([
+                'session.secure' => true,
+                'session.same_site' => 'none',
+                'session.partitioned' => true,
+            ]);
         }
 
         JadwalMomentum::observe(JadwalMomentumObserver::class);

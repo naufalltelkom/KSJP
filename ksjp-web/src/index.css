@@ -27,6 +27,11 @@
 }
 
 @layer base {
+  html,
+  body {
+    overflow-x: clip;
+  }
+
   body {
     font-family: var(--font-sans);
     background-color: var(--color-surface);
@@ -223,6 +228,7 @@
 @layer components {
   .ios-liquid-glass-nav {
     border-radius: 9999px;
+    overflow: hidden;
     background: linear-gradient(
       180deg,
       rgba(218, 222, 230, 0.76) 0%,

@@ -275,7 +275,7 @@ function PortalShell() {
       toast={toast}
       onDismissToast={() => setToast(null)}
     >
-      <div key={activeTab} className="ksjp-page-transition">
+      <div key={activeTab} className="ksjp-page-transition flex-1 flex flex-col min-w-0 w-full">
         {activeTab === 'dashboard' && (
           <DashboardPage
             jadwalData={jadwalData}

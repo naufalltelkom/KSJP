@@ -661,4 +661,51 @@ class KsjpApiAndRbacTest extends TestCase
             ->assertCreated()
             ->assertJsonPath('data.sumber', 'organisasi');
     }
+
+    public function test_filament_sso_allows_guru_and_organisasi_with_iframe_headers_and_blocks_siswa(): void
+    {
+        $siswa = User::where('nis', '541251004')->firstOrFail();
+        $guru = User::where('email', 'firda@smktelkom-pwt.sch.id')->firstOrFail();
+        $osis = User::where('email', 'osis@smktelkom-pwt.sch.id')->firstOrFail();
+
+        $siswaToken = $siswa->createToken('test')->plainTextToken;
+        $guruToken = $guru->createToken('test')->plainTextToken;
+        $osisToken = $osis->createToken('test')->plainTextToken;
+
+        $this->withHeader('Authorization', "Bearer {$siswaToken}")
+            ->postJson('/api/admin/filament-sso')
+            ->assertForbidden();
+
+        app('auth')->forgetGuards();
+
+        $ssoRes = $this->withHeader('Authorization', "Bearer {$osisToken}")
+            ->postJson('/api/admin/filament-sso')
+            ->assertOk()
+            ->assertJsonPath('success', true);
+
+        $ssoUrl = (string) $ssoRes->json('data.sso_url');
+        $this->assertStringContainsString('/admin-sso', $ssoUrl);
+
+        app('auth')->forgetGuards();
+
+        $parsed = parse_url($ssoUrl);
+        $pathAndQuery = ($parsed['path'] ?? '/admin-sso') . '?' . ($parsed['query'] ?? '');
+        $this->get($pathAndQuery)->assertRedirect('/admin');
+        $this->assertAuthenticatedAs($osis, 'web');
+
+        $panelRes = $this->get('/admin')->assertOk();
+        $this->assertFalse($panelRes->headers->has('X-Frame-Options'));
+        $this->assertStringContainsString(
+            'https://ksjp-web.vercel.app',
+            (string) $panelRes->headers->get('Content-Security-Policy')
+        );
+
+        auth('web')->logout();
+        app('auth')->forgetGuards();
+
+        $this->withHeader('Authorization', "Bearer {$guruToken}")
+            ->postJson('/api/admin/filament-sso')
+            ->assertOk()
+            ->assertJsonPath('data.role', 'guru');
+    }
 }

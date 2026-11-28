@@ -29,6 +29,7 @@ Route::middleware('auth:sanctum')->group(function (): void {
     Route::post('/push/test', [PushSubscriptionController::class, 'test']);
 
     Route::prefix('/admin')->group(function (): void {
+        Route::post('/filament-sso', [AdminPortalController::class, 'filamentSso']);
         Route::get('/overview', [AdminPortalController::class, 'overview']);
         Route::post('/kalender', [AdminPortalController::class, 'storeKalender']);
         Route::delete('/kalender/{id}', [AdminPortalController::class, 'deleteKalender']);

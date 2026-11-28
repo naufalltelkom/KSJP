@@ -4,6 +4,7 @@ namespace App\Providers\Filament;
 
 use App\Filament\Widgets\KalenderDashboardWidget;
 use App\Filament\Widgets\KsjpStatsOverview;
+use App\Http\Middleware\AllowFilamentIframe;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -55,6 +56,7 @@ class AdminPanelProvider extends PanelProvider
                 KalenderDashboardWidget::class,
             ])
             ->middleware([
+                AllowFilamentIframe::class,
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
                 StartSession::class,

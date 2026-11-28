@@ -6,7 +6,6 @@ import {
   getStoredUser,
   loginRequest,
   logoutRequest,
-  registerRequest,
   setAuthSession,
 } from '../services/api';
 
@@ -54,15 +53,6 @@ export function AuthProvider({ children }) {
     return res.data;
   }, []);
 
-  const register = useCallback(async (payload, { deferCommit = false } = {}) => {
-    const res = await registerRequest(payload);
-    if (!deferCommit) {
-      setToken(res.data.token);
-      setUser(res.data.user);
-    }
-    return res.data;
-  }, []);
-
   const commitAuth = useCallback((authData) => {
     if (authData?.token && authData?.user) {
       setAuthSession(authData.token, authData.user);
@@ -85,7 +75,6 @@ export function AuthProvider({ children }) {
         initializing,
         isAuthenticated: Boolean(token && user),
         login,
-        register,
         commitAuth,
         logout,
         syncProfile,

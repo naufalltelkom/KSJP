@@ -14,9 +14,36 @@ use App\Services\JadwalService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\URL;
 
 class AdminPortalController extends Controller
 {
+    public function filamentSso(Request $request): JsonResponse
+    {
+        /** @var User $user */
+        $user = $request->user();
+        if ($user->isSiswa()) {
+            return response()->json(['success' => false, 'message' => 'Akses ditolak.'], 403);
+        }
+
+        $ssoUrl = URL::temporarySignedRoute(
+            'filament.sso',
+            now()->addMinutes(10),
+            [
+                'uid' => $user->id,
+                'embed' => 1,
+            ]
+        );
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'sso_url' => $ssoUrl,
+                'role' => $user->role?->value ?? (string) $user->role,
+            ],
+        ]);
+    }
+
     public function overview(Request $request, JadwalService $jadwalService): JsonResponse
     {
         /** @var User $user */

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ksjp-stematel-shell-v13';
+const CACHE_NAME = 'ksjp-stematel-shell-v14';
 const APP_SHELL = [
   '/',
   '/manifest.webmanifest?v=2',

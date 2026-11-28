@@ -745,9 +745,48 @@
         background-color: #d91e2a !important;
         color: #ffffff !important;
     }
+
+    /* Compact Embedded Mode (when loaded inside KSJP Web Halaman Admin iframe) */
+    html.ksjp-fi-embedded .ksjp-fi-white-rail,
+    html.ksjp-fi-embedded .ksjp-fi-portal-card,
+    html.ksjp-fi-embedded .ksjp-fi-ring-collapsed {
+        display: none !important;
+    }
+
+    @media (min-width: 1024px) {
+        html.ksjp-fi-embedded .fi-sidebar.fi-main-sidebar.fi-sidebar-open {
+            width: 236px !important;
+            padding-right: 0 !important;
+        }
+        html.ksjp-fi-embedded body:has(#fi-main-sidebar.fi-sidebar-open) .fi-topbar-ctn,
+        html.ksjp-fi-embedded body:has(#fi-main-sidebar.fi-sidebar-open) .fi-main-ctn,
+        html.ksjp-fi-embedded body.ksjp-fi-open .fi-topbar-ctn,
+        html.ksjp-fi-embedded body.ksjp-fi-open .fi-main-ctn {
+            padding-inline-start: 262px !important;
+        }
+        html.ksjp-fi-embedded body:has(#fi-main-sidebar:not(.fi-sidebar-open)) .fi-topbar-ctn,
+        html.ksjp-fi-embedded body:has(#fi-main-sidebar:not(.fi-sidebar-open)) .fi-main-ctn,
+        html.ksjp-fi-embedded body.ksjp-fi-collapsed .fi-topbar-ctn,
+        html.ksjp-fi-embedded body.ksjp-fi-collapsed .fi-main-ctn {
+            padding-inline-start: 96px !important;
+        }
+        html.ksjp-fi-embedded .fi-sidebar.fi-main-sidebar.fi-sidebar-open .fi-sidebar-item.fi-active .fi-sidebar-item-btn {
+            margin-right: 12px !important;
+            width: calc(100% - 24px) !important;
+            border-radius: 9999px !important;
+        }
+        html.ksjp-fi-embedded .fi-sidebar.fi-main-sidebar.fi-sidebar-open .fi-sidebar-item.fi-active .fi-sidebar-item-btn::before,
+        html.ksjp-fi-embedded .fi-sidebar.fi-main-sidebar.fi-sidebar-open .fi-sidebar-item.fi-active .fi-sidebar-item-btn::after {
+            display: none !important;
+        }
+    }
 </style>
 
 <script>
+    if (window.self !== window.top) {
+        document.documentElement.classList.add('ksjp-fi-embedded');
+    }
+
     window.ksjpFilterAdminSidebar = function (rawQuery) {
         const q = (rawQuery || '').trim().toLowerCase();
         document.querySelectorAll('#fi-main-sidebar .fi-sidebar-item').forEach((item) => {

@@ -1,6 +1,21 @@
 <?php
 
+use App\Models\User;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
+
+Route::get('/admin-sso', function (Request $request) {
+    $uid = (int) $request->query('uid');
+    $user = User::findOrFail($uid);
+    abort_if($user->isSiswa(), 403, 'Akses khusus Pengelola.');
+
+    Auth::guard('web')->login($user, true);
+    $request->session()->regenerate();
+    $request->session()->put('ksjp_embed', $request->boolean('embed'));
+
+    return redirect('/admin');
+})->name('filament.sso')->middleware('signed');
 
 Route::get('/', function () {
     return response()->json([

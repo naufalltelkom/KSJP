@@ -4,11 +4,11 @@ import { usePwaInstall } from '../context/PwaContext';
 import { getRoleLabel } from '../utils/date';
 
 const BASE_NAV_ITEMS = [
-  { id: 'dashboard', label: 'Dashboard', railLabel: 'DASHBOARD', icon: 'home' },
-  { id: 'jadwal', label: 'Jadwal Pelajaran', railLabel: 'JADWAL', icon: 'schedule' },
-  { id: 'kalender', label: 'Kalender Akademik', railLabel: 'KALENDER', icon: 'calendar_month' },
-  { id: 'notifikasi', label: 'Notifikasi', railLabel: 'NOTIFIKASI', icon: 'notifications' },
-  { id: 'profil', label: 'Profil & Sesi', railLabel: 'PROFIL', icon: 'person' },
+  { id: 'dashboard', label: 'Dashboard', mobileLabel: 'Home', railLabel: 'DASHBOARD', icon: 'home' },
+  { id: 'jadwal', label: 'Jadwal Pelajaran', mobileLabel: 'Jadwal', railLabel: 'JADWAL', icon: 'schedule' },
+  { id: 'kalender', label: 'Kalender Akademik', mobileLabel: 'Kalender', railLabel: 'KALENDER', icon: 'calendar_month' },
+  { id: 'notifikasi', label: 'Notifikasi', mobileLabel: 'Notif', railLabel: 'NOTIFIKASI', icon: 'notifications' },
+  { id: 'profil', label: 'Profil & Sesi', mobileLabel: 'Profil', railLabel: 'PROFIL', icon: 'person' },
 ];
 
 export default function Layout({
@@ -46,10 +46,11 @@ export default function Layout({
   }, [searchQuery]);
 
   const isStaff = user?.role === 'guru' || user?.role === 'admin_organisasi';
+  const isAdminTab = activeTab === 'admin' && isStaff;
   const navItems = isStaff
     ? [
         ...BASE_NAV_ITEMS.slice(0, 4),
-        { id: 'admin', label: 'Halaman Admin', railLabel: 'ADMIN', icon: 'admin_panel_settings' },
+        { id: 'admin', label: 'Halaman Admin', mobileLabel: 'Admin', railLabel: 'ADMIN', icon: 'admin_panel_settings' },
         BASE_NAV_ITEMS[4],
       ]
     : BASE_NAV_ITEMS;
@@ -181,7 +182,11 @@ export default function Layout({
   })();
 
   return (
-    <div className="min-h-screen bg-surface text-on-surface flex">
+    <div
+      className={`min-h-screen w-full overflow-x-clip flex transition-colors duration-300 ${
+        isAdminTab ? 'bg-[#09090b] text-slate-100' : 'bg-surface text-on-surface'
+      }`}
+    >
       {/* Desktop Floating Glassy Sidebar V10 */}
       <aside
         className={`hidden lg:flex fixed top-3.5 left-3.5 bottom-3.5 z-30 glassy-sidebar-shell select-none ${
@@ -647,21 +652,6 @@ export default function Layout({
                   </button>
                 );
               })}
-
-              {isStaff && (
-                <a
-                  href={adminUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="mt-3 w-full flex items-center justify-between px-4 py-2.5 rounded-full bg-amber-400/20 border border-amber-300/30 text-amber-100 text-sm font-semibold"
-                >
-                  <span className="flex items-center gap-3">
-                    <span className="material-symbols-outlined text-[20px]">admin_panel_settings</span>
-                    Panel Admin
-                  </span>
-                  <span className="material-symbols-outlined text-[16px]">open_in_new</span>
-                </a>
-              )}
             </div>
             <div className="space-y-2 pt-3 border-t border-white/15">
               {isMobileDevice && (
@@ -691,12 +681,12 @@ export default function Layout({
 
       {/* Main Content Wrapper (Dynamic Padding Matching Floating Sidebar Width) */}
       <div
-        className={`flex-1 flex flex-col min-w-0 transition-[padding] duration-300 ease-out ${
+        className={`flex-1 flex flex-col min-w-0 w-full overflow-x-clip transition-[padding] duration-300 ease-out ${
           collapsed ? 'lg:pl-[94px]' : 'lg:pl-[298px] xl:pl-[326px]'
         }`}
       >
         {/* iOS Liquid Glass Topbar (Grey Glass + Black Typography) */}
-        <header className="mx-3 sm:mx-6 mt-3.5 h-16 sticky top-3.5 z-20 ios-liquid-glass-nav px-3 sm:px-5 flex items-center justify-between gap-2 sm:gap-3">
+        <header className="mx-3 sm:mx-6 mt-3.5 h-16 sticky top-3.5 z-20 ios-liquid-glass-nav px-3 sm:px-5 flex items-center justify-between gap-2 sm:gap-3 min-w-0 max-w-full">
           <div className="relative z-10 flex items-center gap-2 sm:gap-2.5 flex-1 min-w-0">
             <button
               type="button"
@@ -781,7 +771,13 @@ export default function Layout({
         </header>
 
         {/* Page Body */}
-        <main className="flex-1 p-4 sm:p-5 lg:p-6 pb-28 lg:pb-8 max-w-[1440px] w-full mx-auto">
+        <main
+          className={
+            isAdminTab
+              ? 'flex-1 min-w-0 w-full flex flex-col p-2.5 sm:p-4 lg:p-5 pb-24 lg:pb-5'
+              : 'flex-1 min-w-0 p-4 sm:p-5 lg:p-6 pb-28 lg:pb-8 max-w-[1440px] w-full mx-auto flex flex-col'
+          }
+        >
           {children}
         </main>
       </div>
@@ -814,7 +810,7 @@ export default function Layout({
           setDragIndex(null);
           setLiquidMorphing(false);
         }}
-        className="lg:hidden fixed bottom-3.5 inset-x-3.5 z-30 ios-liquid-glass-nav p-1 grid items-center select-none touch-pan-y"
+        className="lg:hidden fixed bottom-3 inset-x-2.5 sm:inset-x-3.5 z-30 ios-liquid-glass-nav p-1 grid items-center select-none touch-pan-y"
         style={{ gridTemplateColumns: `repeat(${navItems.length}, minmax(0, 1fr))` }}
       >
         {/* Sliding & Stretching Liquid Droplet Pill */}
@@ -836,19 +832,21 @@ export default function Layout({
               key={item.id}
               type="button"
               onClick={() => onSelectTab(item.id)}
-              className={`relative z-10 flex flex-col items-center justify-center gap-0.5 py-2 rounded-full text-[10px] transition-colors duration-200 cursor-pointer ${
+              className={`relative z-10 flex flex-col items-center justify-center gap-0.5 py-2 rounded-full transition-colors duration-200 cursor-pointer min-w-0 ${
+                navItems.length > 5 ? 'text-[9.5px] sm:text-[10px]' : 'text-[10px]'
+              } ${
                 isSettledActive ? 'text-[#b10019] font-extrabold' : 'text-[#111827] font-semibold'
               }`}
             >
               <span
-                className={`material-symbols-outlined text-[20px] transition-transform duration-200 ${
+                className={`material-symbols-outlined text-[19px] sm:text-[20px] transition-transform duration-200 ${
                   isSettledActive ? 'material-symbols-fill scale-105' : ''
                 }`}
               >
                 {item.icon}
               </span>
               <span className="leading-none tracking-tight truncate max-w-full px-0.5">
-                {item.id === 'admin' ? 'Admin' : item.label.split(' ')[0]}
+                {item.mobileLabel || item.label.split(' ')[0]}
               </span>
               {item.id === 'notifikasi' && unreadCount > 0 && (
                 <span className="absolute top-1.5 right-3 w-2 h-2 rounded-full bg-[#d91e2a] ring-1 ring-white" />
